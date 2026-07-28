@@ -21,13 +21,8 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,css,md}": [
-      "prettier --write"
-    ]
+    "*.{ts,tsx,js,jsx}": "eslint --fix --max-warnings=0",
+    "*.{json,css,md}": "prettier --write"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

@@ -40,4 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /src/generated/prisma
+/dev.db
+
+# uploads
+/public/uploads/
+
+# AI agent config dirs
+/.agents/
+/.claude/
+/.windsurf/
