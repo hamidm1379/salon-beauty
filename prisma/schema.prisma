@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  username       String    @unique
+  email          String    @unique
+  passwordHash   String
+  phone          String?
+  role           String    @default("EDITOR") // ADMIN | EDITOR
+  avatar         String?
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  appointments Appointment[]
+
+  @@index([username])
+  @@index([email])
+  @@index([role])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  services Service[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       Float
+  duration    Int
+  image       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  appointments Appointment[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model Appointment {
+  id            String @id @default(cuid())
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  date          DateTime
+  time          String
+  notes         String?
+  status        String @default("PENDING") // PENDING | CONFIRMED | CANCELLED | COMPLETED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([date])
+  @@index([serviceId])
+  @@index([userId])
+  @@index([customerEmail])
+}
+
+model Gallery {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  imageId String? @unique
+  image   Image?  @relation(fields: [imageId], references: [id], onDelete: SetNull)
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model BlogCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts Blog[]
+
+  @@index([slug])
+}
+
+model Blog {
+  id               String    @id @default(cuid())
+  title            String
+  slug             String    @unique
+  excerpt          String?
+  content          String
+  coverImage       String?
+  published        Boolean   @default(false)
+  publishedAt      DateTime?
+  primaryKeyword   String?
+  secondaryKeyword String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  blogCategoryId String
+  blogCategory   BlogCategory @relation(fields: [blogCategoryId], references: [id], onDelete: Cascade)
+
+  imageId String? @unique
+  image   Image?  @relation(fields: [imageId], references: [id], onDelete: SetNull)
+
+  @@index([slug])
+  @@index([published])
+  @@index([blogCategoryId])
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  type      String   @default("image") // image | video
+  alt       String?
+  width     Int?
+  height    Int?
+  blurHash  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gallery Gallery?
+  blog    Blog?
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  group     String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([group])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([isRead])
+  @@index([createdAt])
+}

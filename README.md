@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beauty Salon — Next.js 16
 
-## Getting Started
+سالن زیبایی با طراحی لوکس، مینیمال و مدرن. پشتیبانی کامل از RTL، حالت تاریک، و بهینه‌سازی SEO.
 
-First, run the development server:
+## تکنولوژی‌ها
+
+- **Framework:** Next.js 16 (App Router)
+- **UI:** React 19, Tailwind CSS v4, Framer Motion
+- **ORM:** Prisma + PostgreSQL
+- **Auth:** JWT (jose)
+- **State:** TanStack Query, Zustand
+- **Forms:** React Hook Form + Zod
+
+## راه‌اندازی
 
 ```bash
+# 1. نصب وابستگی‌ها
+npm install
+
+# 2. کپی فایل محیطی
+cp .env.example .env.local
+
+# 3. تنظیم متغیرهای محیطی در .env.local
+#    - DATABASE_URL: آدرس دیتابیس PostgreSQL
+#    - JWT_SECRET: کلید محرمانه JWT
+#    - NEXT_PUBLIC_APP_URL: آدرس اپلیکیشن
+
+# 4. ساخت دیتابیس
+npx prisma migrate dev
+
+# 5. تولید Prisma Client
+npx prisma generate
+
+# 6. اضافه کردن داده‌های اولیه (اختیاری)
+npx prisma db seed
+
+# 7. اجرای سرور توسعه
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## دستورات مفید
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev          # سرور توسعه
+npm run build        # بیلد پرو덕شن
+npm run start        # اجرای پرو덕شن
+npm run lint         # بررسی کد
+npm run lint:fix     # رفع خودکار مشکلات
+npm run format       # فرمت‌دهی کد
+npm run format:check # بررسی فرمت
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Prisma
+npx prisma studio    # مشاهده دیتابیس
+npx prisma migrate dev  # مایگریشن جدید
+npx prisma db seed   # داده‌های اولیه
+```
 
-## Learn More
+## ساختار پروژه
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── (public)/          # صفحات عمومی
+│   │   ├── about/         # درباره ما
+│   │   ├── appointment/   # رزرو نوبت
+│   │   ├── blog/          # بلاگ
+│   │   ├── contact/       # تماس با ما
+│   │   ├── gallery/       # گالری
+│   │   └── services/      # خدمات
+│   ├── (dashboard)/       # پنل مدیریت
+│   │   └── admin/
+│   │       ├── dashboard/
+│   │       ├── services/
+│   │       ├── blog/
+│   │       ├── gallery/
+│   │       ├── contacts/
+│   │       ├── users/
+│   │       └── settings/
+│   └── api/               # API Routes
+├── components/            # کامپوننت‌ها
+│   ├── home/              # صفحه اصلی
+│   ├── layout/            # هدر و فوتر
+│   ├── ui/                # کامپوننت‌های پایه
+│   ├── services/          # فیلتر خدمات
+│   ├── gallery/           # گالری تصاویر
+│   ├── blog/              # بلاگ
+│   ├── appointment/       # رزرو نوبت
+│   ├── admin/             # پنل مدیریت
+│   └── shared/            # اشتراکی (JSON-LD)
+├── hooks/                 # Custom Hooks
+├── lib/                   # وابستگی‌ها (Prisma, Auth, etc.)
+└── utils/                 # ابزارها
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ویژگی‌ها
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Server Components First با Dynamic Import برای کامپوننت‌های سنگین
+- `next/image` با `sizes` بهینه و Sharp pipeline
+- ISR (Incremental Static Regeneration) برای صفحات کم‌تغییر
+- دسترسی‌پذیری (Accessibility): contrast مناسب، aria-label، کیبورد نویگیشن
+- حالت تاریک (Dark Mode) با next-themes
+- SEO کامل: metadata, JSON-LD, sitemap, robots.txt
+- ریسپانسیو: mobile-first با breakpoint‌های standard

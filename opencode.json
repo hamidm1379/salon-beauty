@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "skill": {
+    "paths": [".agents/skills"]
+  },
+  "agent": {
+    "build": {
+      "model": "anthropic/claude-sonnet-4-6"
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "npm *": "allow",
+      "npx prisma *": "allow",
+      "npx next *": "allow",
+      "git *": "ask",
+      "*": "ask"
+    }
+  }
+}
