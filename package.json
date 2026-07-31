@@ -28,6 +28,7 @@
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.4.2",
     "@libsql/client": "^0.17.4",
+    "@marsidev/react-turnstile": "^1.5.4",
     "@prisma/adapter-libsql": "^7.9.0",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0",

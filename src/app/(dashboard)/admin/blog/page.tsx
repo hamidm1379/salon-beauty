@@ -9,17 +9,17 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   Loader2,
   Search,
   FileText,
   Calendar,
   Tag,
-  MoreVertical,
-  PenLine,
+  FolderPlus,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
@@ -28,24 +28,30 @@ import {
   useDeleteBlogPost,
   useUpdateBlogPost,
 } from "@/hooks/use-blog";
-import { useBlogCategories } from "@/hooks/use-blog-categories";
+import {
+  useBlogCategories,
+  useCreateBlogCategory,
+} from "@/hooks/use-blog-categories";
 
 export default function AdminBlogPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryDesc, setNewCategoryDesc] = useState("");
 
   const { data: postsData, isLoading } = useBlogPosts({
     blogCategoryId: selectedCategory || undefined,
     search: search || undefined,
     page,
-    limit: 12,
+    limit: 10,
   });
 
   const { data: categoriesData } = useBlogCategories();
   const deletePost = useDeleteBlogPost();
   const updatePost = useUpdateBlogPost();
+  const createCategory = useCreateBlogCategory();
 
   const posts = postsData?.items || [];
   const totalPages = postsData?.totalPages || 1;
@@ -58,7 +64,6 @@ export default function AdminBlogPage() {
   const handleDelete = (id: string) => {
     if (confirm("آیا از حذف این پست اطمینان دارید؟")) {
       deletePost.mutate(id);
-      setActiveMenu(null);
     }
   };
 
@@ -67,7 +72,20 @@ export default function AdminBlogPage() {
       id,
       data: { published: !currentStatus },
     });
-    setActiveMenu(null);
+  };
+
+  const handleCreateCategory = () => {
+    if (!newCategoryName.trim()) return;
+    createCategory.mutate(
+      { name: newCategoryName.trim(), description: newCategoryDesc.trim() || undefined },
+      {
+        onSuccess: () => {
+          setNewCategoryName("");
+          setNewCategoryDesc("");
+          setShowCategoryModal(false);
+        },
+      }
+    );
   };
 
   return (
@@ -80,12 +98,22 @@ export default function AdminBlogPage() {
             ایجاد و مدیریت مقالات بلاگ
           </p>
         </div>
-        <Link href="/admin/blog/new">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            پست جدید
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            className="gap-2"
+            onClick={() => setShowCategoryModal(true)}
+          >
+            <FolderPlus className="w-4 h-4" />
+            دسته‌بندی جدید
           </Button>
-        </Link>
+          <Link href="/admin/blog/new">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              پست جدید
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
@@ -93,7 +121,7 @@ export default function AdminBlogPage() {
         {[
           { label: "کل پست‌ها", value: totalPosts, icon: FileText, color: "var(--color-primary)" },
           { label: "منتشر شده", value: publishedCount, icon: Eye, color: "#22c55e" },
-          { label: "پیش‌نویس", value: draftCount, icon: PenLine, color: "#f59e0b" },
+          { label: "پیش‌نویس", value: draftCount, icon: FileText, color: "#f59e0b" },
           { label: "دسته‌بندی", value: categories.length, icon: Tag, color: "#8b5cf6" },
         ].map((stat, i) => (
           <motion.div
@@ -105,7 +133,7 @@ export default function AdminBlogPage() {
             <Card>
               <CardContent className="p-4 flex items-center gap-4">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{ backgroundColor: `${stat.color}15` }}
                 >
                   <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
@@ -136,42 +164,27 @@ export default function AdminBlogPage() {
                 className="pr-10"
               />
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  setSelectedCategory("");
+            <div className="w-full sm:w-56">
+              <Select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
                   setPage(1);
                 }}
-                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                  !selectedCategory
-                    ? "bg-[var(--color-primary)] text-white shadow-md shadow-[var(--color-primary)]/20"
-                    : "bg-[var(--color-bg-soft)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10"
-                }`}
-              >
-                همه
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setPage(1);
-                  }}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                    selectedCategory === cat.id
-                      ? "bg-[var(--color-primary)] text-white shadow-md shadow-[var(--color-primary)]/20"
-                      : "bg-[var(--color-bg-soft)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10"
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+                options={[
+                  { value: "", label: "همه دسته‌بندی‌ها" },
+                  ...categories.map((cat) => ({
+                    value: cat.id,
+                    label: cat.name,
+                  })),
+                ]}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Posts Grid */}
+      {/* Posts Table */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
@@ -195,161 +208,144 @@ export default function AdminBlogPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {posts.map((post, index) => (
-              <motion.div
-                key={post.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.03 }}
-              >
-                <Card hover className="group h-full flex flex-col">
-                  {/* Cover Image */}
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-t-3xl">
-                    {post.coverImage || post.image?.url ? (
-                      <Image
-                        src={post.coverImage || post.image?.url || ""}
-                        alt={post.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-primary)]/5 flex items-center justify-center">
-                        <PenLine className="w-10 h-10 text-[var(--color-primary)]/30" />
-                      </div>
-                    )}
-
-                    {/* Status Badge */}
-                    <div className="absolute top-3 right-3">
-                      <Badge
-                        variant={post.published ? "success" : "warning"}
-                        className="backdrop-blur-sm"
-                      >
-                        {post.published ? "منتشر شده" : "پیش‌نویس"}
-                      </Badge>
-                    </div>
-
-                    {/* Menu Button */}
-                    <div className="absolute top-3 left-3">
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setActiveMenu(activeMenu === post.id ? null : post.id)
-                          }
-                          className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition shadow-sm"
-                        >
-                          <MoreVertical className="w-4 h-4 text-[var(--color-ink)]" />
-                        </button>
-
-                        <AnimatePresence>
-                          {activeMenu === post.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9, y: -5 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.9, y: -5 }}
-                              className="absolute left-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-[var(--color-ink)]/10 py-1 z-20"
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[var(--color-ink)]/10">
+                  <th className="text-right text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5">
+                    مقاله
+                  </th>
+                  <th className="text-right text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5 hidden md:table-cell">
+                    دسته‌بندی
+                  </th>
+                  <th className="text-right text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5 hidden lg:table-cell">
+                    تاریخ
+                  </th>
+                  <th className="text-center text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5">
+                    وضعیت
+                  </th>
+                  <th className="text-center text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5">
+                    عملیات
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-ink)]/5">
+                <AnimatePresence>
+                  {posts.map((post, index) => (
+                    <motion.tr
+                      key={post.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      className="group hover:bg-[var(--color-bg-soft)]/50 transition-colors"
+                    >
+                      {/* Title + thumbnail */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-12 rounded-lg overflow-hidden bg-[var(--color-bg-soft)] shrink-0 border border-[var(--color-ink)]/5">
+                            {post.coverImage || post.image?.url ? (
+                              <Image
+                                src={post.image?.url || post.coverImage || ""}
+                                alt={post.title}
+                                width={128}
+                                height={96}
+                                sizes="128px"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-[var(--color-ink-muted)]/40" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/blog/edit/${post.id}`}
+                              className="font-semibold text-sm text-[var(--color-ink)] hover:text-[var(--color-primary)] transition-colors line-clamp-1"
                             >
-                              <Link
-                                href={`/blog/${post.slug}`}
-                                target="_blank"
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-ink)] hover:bg-[var(--color-bg-soft)] transition"
-                                onClick={() => setActiveMenu(null)}
-                              >
-                                <Eye className="w-4 h-4" />
-                                مشاهده
-                              </Link>
-                              <button
-                                onClick={() =>
-                                  handleTogglePublish(post.id, post.published)
-                                }
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-ink)] hover:bg-[var(--color-bg-soft)] transition"
-                              >
-                                {post.published ? (
-                                  <>
-                                    <EyeOff className="w-4 h-4" />
-                                    انتشار پیش‌نویس
-                                  </>
-                                ) : (
-                                  <>
-                                    <Eye className="w-4 h-4" />
-                                    انتشار
-                                  </>
-                                )}
-                              </button>
-                              <Link
-                                href={`/admin/blog/edit/${post.id}`}
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-ink)] hover:bg-[var(--color-bg-soft)] transition"
-                                onClick={() => setActiveMenu(null)}
-                              >
-                                <Edit className="w-4 h-4" />
-                                ویرایش
-                              </Link>
-                              <hr className="my-1 border-[var(--color-ink)]/5" />
-                              <button
-                                onClick={() => handleDelete(post.id)}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                حذف
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </div>
+                              {post.title}
+                            </Link>
+                            {post.excerpt && (
+                              <p className="text-xs text-[var(--color-ink-muted)] line-clamp-1 mt-0.5">
+                                {post.excerpt}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
 
-                  {/* Content */}
-                  <CardContent className="p-5 flex-1 flex flex-col">
-                    {/* Category */}
-                    <Badge variant="default" className="text-xs w-fit mb-3">
-                      {post.blogCategory.name}
-                    </Badge>
+                      {/* Category */}
+                      <td className="px-5 py-4 hidden md:table-cell">
+                        <Badge variant="default" className="text-xs">
+                          {post.blogCategory.name}
+                        </Badge>
+                      </td>
 
-                    {/* Title */}
-                    <h3 className="font-bold text-[var(--color-ink)] line-clamp-2 mb-2 group-hover:text-[var(--color-primary)] transition-colors">
-                      {post.title}
-                    </h3>
+                      {/* Date */}
+                      <td className="px-5 py-4 hidden lg:table-cell">
+                        <span className="text-sm text-[var(--color-ink-muted)] flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(post.createdAt).toLocaleDateString("fa-IR")}
+                        </span>
+                      </td>
 
-                    {/* Excerpt */}
-                    {post.excerpt && (
-                      <p className="text-sm text-[var(--color-ink-muted)] line-clamp-2 mb-4 flex-1">
-                        {post.excerpt}
-                      </p>
-                    )}
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-[var(--color-ink)]/5 mt-auto">
-                      <div className="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {new Date(post.createdAt).toLocaleDateString("fa-IR")}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Link href={`/admin/blog/edit/${post.id}`}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDelete(post.id)}
+                      {/* Status */}
+                      <td className="px-5 py-4 text-center">
+                        <button
+                          onClick={() => handleTogglePublish(post.id, post.published)}
+                          className="inline-flex"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+                          <Badge
+                            variant={post.published ? "success" : "warning"}
+                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                          >
+                            {post.published ? "منتشر شده" : "پیش‌نویس"}
+                          </Badge>
+                        </button>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center justify-center gap-1">
+                          <Link href={`/blog/${post.slug}`} target="_blank">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              title="مشاهده"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                          <Link href={`/admin/blog/edit/${post.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              title="ویرایش"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            title="حذف"
+                            onClick={() => handleDelete(post.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
       {/* Pagination */}
@@ -362,6 +358,86 @@ export default function AdminBlogPage() {
           />
         </div>
       )}
+
+      {/* Add Category Modal */}
+      <AnimatePresence>
+        {showCategoryModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowCategoryModal(false)}
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-ink)]/10">
+                <h3 className="text-lg font-bold text-[var(--color-ink)]">
+                  دسته‌بندی جدید
+                </h3>
+                <button
+                  onClick={() => setShowCategoryModal(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--color-bg-soft)] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 py-5 space-y-4">
+                <Input
+                  label="نام دسته‌بندی"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="مثلاً: نکات زیبایی"
+                  autoFocus
+                />
+                <Input
+                  label="توضیحات (اختیاری)"
+                  value={newCategoryDesc}
+                  onChange={(e) => setNewCategoryDesc(e.target.value)}
+                  placeholder="توضیح کوتاه درباره دسته‌بندی"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--color-ink)]/10 bg-[var(--color-bg-soft)]/50">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowCategoryModal(false)}
+                >
+                  انصراف
+                </Button>
+                <Button
+                  onClick={handleCreateCategory}
+                  disabled={!newCategoryName.trim() || createCategory.isPending}
+                >
+                  {createCategory.isPending ? (
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 ml-2" />
+                  )}
+                  ایجاد دسته‌بندی
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

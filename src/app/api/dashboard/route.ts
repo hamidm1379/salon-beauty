@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { successResponse, handleApiError } from "@/utils/api-response";
-import { startOfDay, endOfDay, subDays, format } from "date-fns";
+import { startOfDay, endOfDay, subDays, subMonths, format } from "date-fns";
 
 export async function GET() {
   try {
@@ -12,9 +12,12 @@ export async function GET() {
       todayAppointments,
       pendingAppointments,
       totalServices,
+      totalUsers,
+      totalBlogPosts,
       unreadMessages,
       recentAppointments,
       weeklyData,
+      monthlyData,
     ] = await Promise.all([
       prisma.appointment.count({
         where: {
@@ -28,6 +31,8 @@ export async function GET() {
       prisma.service.count({
         where: { isActive: true },
       }),
+      prisma.user.count(),
+      prisma.blog.count(),
       prisma.contactMessage.count({
         where: { isRead: false },
       }),
@@ -54,14 +59,31 @@ export async function GET() {
           };
         })
       ),
+      Promise.all(
+        Array.from({ length: 6 }, async (_, i) => {
+          const month = subMonths(today, 5 - i);
+          const monthStart = startOfDay(new Date(month.getFullYear(), month.getMonth(), 1));
+          const monthEnd = endOfDay(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+          const count = await prisma.appointment.count({
+            where: {
+              date: { gte: monthStart, lte: monthEnd },
+            },
+          });
+          return {
+            month: format(month, "MMM"),
+            count,
+          };
+        })
+      ),
     ]);
 
     const stats = {
       todayAppointments,
       pendingAppointments,
       totalServices,
+      totalUsers,
+      totalBlogPosts,
       unreadMessages,
-      totalBlogViews: 0,
       recentAppointments: recentAppointments.map((apt) => ({
         id: apt.id,
         customerName: apt.customerName,
@@ -71,6 +93,7 @@ export async function GET() {
         service: apt.service,
       })),
       weeklyAppointments: weeklyData,
+      monthlyAppointments: monthlyData,
     };
 
     return successResponse(stats);

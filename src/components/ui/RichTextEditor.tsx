@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
@@ -9,6 +10,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import Placeholder from "@tiptap/extension-placeholder";
+import axiosInstance from "@/lib/axios";
 import {
   Bold,
   Italic,
@@ -74,6 +76,8 @@ export function RichTextEditor({
   className,
   minHeight = "300px",
 }: RichTextEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -104,23 +108,60 @@ export function RichTextEditor({
     },
   });
 
-  if (!editor) {
-    return (
-      <div
-        className={`border border-gray-200 rounded-xl bg-gray-50 ${className}`}
-        style={{ minHeight }}
-      />
-    );
-  }
+  const handleImageUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !editor) return;
+
+      // Show loading state
+      editor.chain().focus().setImage({ src: "/uploading-placeholder.svg" }).run();
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("alt", file.name);
+
+        const { data } = await axiosInstance.post("/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        if (data.success && data.data?.url) {
+          // Replace placeholder with actual image
+          editor.chain().focus().setImage({ src: data.data.url, alt: file.name }).run();
+        } else {
+          // Remove placeholder on error
+          const { state } = editor;
+          const pos = state.selection.$from.pos;
+          const resolved = state.doc.resolve(pos);
+          const node = resolved.nodeBefore;
+          if (node && node.type.name === "image") {
+            editor.chain().focus().deleteRange({ from: pos - node.nodeSize, to: pos }).run();
+          }
+        }
+      } catch {
+        // Remove placeholder on error — find and delete the placeholder image
+        const { state } = editor;
+        const pos = state.selection.$from.pos;
+        // Walk backwards to find the placeholder image node
+        const resolved = state.doc.resolve(pos);
+        const node = resolved.nodeBefore;
+        if (node && node.type.name === "image") {
+          editor.chain().focus().deleteRange({ from: pos - node.nodeSize, to: pos }).run();
+        }
+      }
+
+      // Reset file input
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [editor]
+  );
 
   const addImage = () => {
-    const url = window.prompt("آدرس تصویر را وارد کنید:");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+    fileInputRef.current?.click();
   };
 
   const setLink = () => {
+    if (!editor) return;
     const previousUrl = editor.getAttributes("link").href;
     const url = window.prompt("آدرس لینک:", previousUrl);
     if (url === null) return;
@@ -132,6 +173,7 @@ export function RichTextEditor({
   };
 
   const addTable = () => {
+    if (!editor) return;
     editor
       .chain()
       .focus()
@@ -139,8 +181,26 @@ export function RichTextEditor({
       .run();
   };
 
+  if (!editor) {
+    return (
+      <div
+        className={`border border-gray-200 rounded-xl bg-gray-50 ${className}`}
+        style={{ minHeight }}
+      />
+    );
+  }
+
   return (
     <div className={className}>
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 p-2 border border-b-0 border-gray-200 rounded-t-xl bg-[var(--color-bg-soft)]">
         <ToolbarButton
@@ -209,7 +269,7 @@ export function RichTextEditor({
           <LinkIcon className="w-4 h-4" />
         </ToolbarButton>
 
-        <ToolbarButton onClick={addImage} title="تصویر">
+        <ToolbarButton onClick={addImage} title="آپلود تصویر">
           <ImageIcon className="w-4 h-4" />
         </ToolbarButton>
 
