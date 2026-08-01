@@ -5,8 +5,8 @@ import { jwtVerify } from "jose";
 /* ─── Route Definitions ─── */
 const routes = {
   public: ["/admin/login", "/api/auth/login"],
-  publicGet: ["/api/blog", "/api/blog-categories", "/api/categories", "/api/settings", "/api/services"],
-  publicPost: ["/api/contact"],
+  publicGet: ["/api/blog", "/api/blog-categories", "/api/categories", "/api/settings", "/api/services", "/api/comments"],
+  publicPost: ["/api/contact", "/api/comments"],
   adminOnly: ["/admin/users", "/admin/settings"],
 } as const;
 

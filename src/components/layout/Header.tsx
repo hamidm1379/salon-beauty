@@ -1,10 +1,11 @@
 "use client";
 
-import { Search, Sparkles, Menu, X, LogIn } from "lucide-react";
+import { Search, Sparkles, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/utils/cn";
+import { SearchModal } from "@/components/search/SearchModal";
 
 const links = [
   { label: "صفحه اصلی", href: "/" },
@@ -18,14 +19,16 @@ const links = [
 export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
+    <>
     <header className="fixed top-0 inset-x-0 z-50 bg-[var(--color-bg)]/80 backdrop-blur-md border-b border-[var(--color-ink)]/5">
       <nav
         className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4"
         aria-label="منوی اصلی"
       >
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 order-last lg:order-first">
           <Sparkles className="w-6 h-6 text-[var(--color-primary)]" aria-hidden="true" />
           <span className="text-xl font-bold text-[var(--color-ink)]">Salon</span>
         </Link>
@@ -48,35 +51,36 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             aria-label="جستجو"
-            className="p-2 rounded-full hover:bg-[var(--color-bg-soft)] transition"
+            onClick={() => setSearchOpen(true)}
+            className="hidden sm:block p-2 rounded-full hover:bg-[var(--color-bg-soft)] transition"
           >
             <Search className="w-5 h-5" />
           </button>
 
-          <Link
+          {/* <Link
             href="/login"
             className="hidden sm:flex items-center gap-1.5 p-2 rounded-full hover:bg-[var(--color-bg-soft)] transition"
             aria-label="ورود / ثبت‌نام"
           >
             <LogIn className="w-5 h-5" />
-          </Link>
+          </Link> */}
 
-          <Link
+          {/* <Link
             href="/appointment"
-            className="rounded-full bg-[var(--color-primary)] text-white px-5 py-2.5 text-sm font-medium hover:scale-105 transition-transform"
+            className="hidden sm:inline-flex rounded-full bg-[var(--color-primary)] text-white px-5 py-2.5 text-sm font-medium hover:scale-105 transition-transform"
           >
             رزرو نوبت
-          </Link>
+          </Link> */}
 
           <button
             type="button"
             aria-label={mobileOpen ? "بستن منو" : "باز کردن منو"}
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-full hover:bg-[var(--color-bg-soft)] transition"
+            className="lg:hidden order-first p-2 rounded-full hover:bg-[var(--color-bg-soft)] transition"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -85,7 +89,7 @@ export function Navbar() {
 
       {mobileOpen && (
         <div className="lg:hidden border-t border-[var(--color-ink)]/5 bg-[var(--color-bg)]">
-          <ul className="flex flex-col px-6 py-4 space-y-1">
+          <ul className="flex flex-col px-4 py-3 space-y-1">
             {links.map((l) => (
               <li key={l.href}>
                 <Link
@@ -102,19 +106,21 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
-            <li>
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 py-3 px-4 rounded-xl text-sm font-medium text-[var(--color-ink-muted)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-ink)] transition"
+            <li className="border-t border-[var(--color-ink)]/5 pt-2 mt-1">
+              <button
+                type="button"
+                onClick={() => { setMobileOpen(false); setSearchOpen(true); }}
+                className="flex items-center gap-2 py-3 px-4 rounded-xl text-sm font-medium text-[var(--color-ink-muted)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-ink)] transition w-full"
               >
-                <LogIn className="w-4 h-4" />
-                ورود / ثبت‌نام
-              </Link>
+                <Search className="w-4 h-4" />
+                جستجو
+              </button>
             </li>
           </ul>
         </div>
       )}
     </header>
+    <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 }

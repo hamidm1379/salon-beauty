@@ -1,18 +1,24 @@
 import { userRepository } from "@/repositories/user.repository";
-import type {
-  ListUsersInput,
-  PaginatedResponse,
-  ApiResponse,
-} from "@/dto";
 import type { User } from "@/generated/prisma/client";
 import type { Role } from "@/dto";
 
 type UserResponse = Omit<User, "passwordHash">;
 
+interface PaginatedUsers {
+  items: UserResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export class UserService {
-  async list(
-    input: ListUsersInput
-  ): Promise<ApiResponse<PaginatedResponse<UserResponse>>> {
+  async list(input: {
+    role?: Role;
+    search?: string;
+    page: number;
+    limit: number;
+  }): Promise<PaginatedUsers> {
     const { role, search, page, limit } = input;
     const where: Record<string, unknown> = {};
 
@@ -46,45 +52,41 @@ export class UserService {
     ]);
 
     return {
-      success: true,
-      data: { items, total, page, limit, totalPages: Math.ceil(total / limit) },
-      message: "Users retrieved successfully",
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
-  async getById(id: string): Promise<ApiResponse<UserResponse>> {
+  async getById(id: string): Promise<UserResponse | null> {
     const user = await userRepository.findById(id);
-    if (!user) {
-      return { success: false, message: "User not found" };
-    }
+    if (!user) return null;
 
     const userWithoutPassword = { ...user };
     delete (userWithoutPassword as Record<string, unknown>).passwordHash;
-    return {
-      success: true,
-      data: userWithoutPassword as UserResponse,
-      message: "Success",
-    };
+    return userWithoutPassword as UserResponse;
   }
 
-  async updateRole(
-    id: string,
-    role: Role
-  ): Promise<ApiResponse<UserResponse>> {
+  async updateRole(id: string, role: Role): Promise<UserResponse> {
     const existing = await userRepository.findById(id);
     if (!existing) {
-      return { success: false, message: "User not found" };
+      throw new Error("User not found");
     }
 
     const updated = await userRepository.update(id, { role });
     const userWithoutPassword = { ...updated };
     delete (userWithoutPassword as Record<string, unknown>).passwordHash;
+    return userWithoutPassword as UserResponse;
+  }
 
-    return {
-      success: true,
-      data: userWithoutPassword as UserResponse,
-      message: "User role updated successfully",
-    };
+  async delete(id: string): Promise<void> {
+    const existing = await userRepository.findById(id);
+    if (!existing) {
+      throw new Error("User not found");
+    }
+    await userRepository.delete(id);
   }
 }
 

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
 
-interface Service {
+export interface Service {
   id: string;
   name: string;
   slug: string;
@@ -12,6 +12,7 @@ interface Service {
   price: number;
   duration: number;
   image: string | null;
+  video: string | null;
   isActive: boolean;
   sortOrder: number;
   category: { id: string; name: string; slug: string };

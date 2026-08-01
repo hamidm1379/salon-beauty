@@ -1,13 +1,49 @@
+import path from "path";
+import fs from "fs/promises";
 import {
   blogRepository,
   type BlogWithRelations,
 } from "@/repositories/blog.repository";
+import { uploadService } from "@/services/upload.service";
 import type {
   CreateBlogInput,
   ListBlogInput,
   PaginatedResponse,
-  ApiResponse,
 } from "@/dto";
+
+async function deleteFileIfExists(url: string | null): Promise<void> {
+  if (!url) return;
+  try {
+    const filePath = path.join(process.cwd(), "public", url);
+    await fs.unlink(filePath);
+  } catch {
+    // File might not exist or already deleted
+  }
+  if (url.startsWith("/uploads/")) {
+    const dir = path.dirname(url);
+    const filename = path.basename(url);
+    const thumbPath = path.join(process.cwd(), "public", dir, `thumb-${filename}`);
+    try {
+      await fs.unlink(thumbPath);
+    } catch {
+      // Thumbnail might not exist
+    }
+  }
+}
+
+function extractImageUrls(html: string | null): string[] {
+  if (!html) return [];
+  const urls: string[] = [];
+  const regex = /<img[^>]+src="([^"]+)"/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    const src = match[1];
+    if (src.startsWith("/uploads/")) {
+      urls.push(src);
+    }
+  }
+  return urls;
+}
 
 export class BlogService {
   async list(
@@ -98,6 +134,29 @@ export class BlogService {
       }
     }
 
+    // Delete old coverImage file if replaced
+    if (input.coverImage !== undefined && input.coverImage !== existing.coverImage) {
+      await deleteFileIfExists(existing.coverImage);
+    }
+
+    // Delete old linked image if replaced
+    if (input.imageId !== undefined && input.imageId !== existing.imageId) {
+      if (existing.imageId) {
+        await uploadService.deleteImage(existing.imageId);
+      }
+    }
+
+    // Clean up removed content images
+    if (input.content !== undefined && input.content !== existing.content) {
+      const oldUrls = new Set(extractImageUrls(existing.content));
+      const newUrls = new Set(extractImageUrls(input.content));
+      for (const url of oldUrls) {
+        if (!newUrls.has(url)) {
+          await deleteFileIfExists(url);
+        }
+      }
+    }
+
     const data: Record<string, unknown> = {};
     if (input.title !== undefined) data.title = input.title;
     if (input.slug !== undefined) data.slug = input.slug;
@@ -132,6 +191,20 @@ export class BlogService {
     if (!existing) {
       throw new Error("Blog post not found");
     }
+
+    // Delete coverImage file from public folder
+    await deleteFileIfExists(existing.coverImage);
+
+    // Delete linked image record and its file from public folder
+    if (existing.imageId) {
+      await uploadService.deleteImage(existing.imageId);
+    }
+
+    // Delete content images from public folder
+    for (const url of extractImageUrls(existing.content)) {
+      await deleteFileIfExists(url);
+    }
+
     await blogRepository.delete(id);
   }
 }

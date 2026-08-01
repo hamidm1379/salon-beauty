@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs/promises";
 import { serviceRepository, type ServiceWithCategory } from "@/repositories/service.repository";
 import { AppError } from "@/lib/errors";
 import {
@@ -20,6 +22,7 @@ function toResponseDTO(service: ServiceWithCategory): ServiceResponseDTO {
     price: service.price,
     duration: service.duration,
     image: service.image,
+    video: service.video,
     isActive: service.isActive,
     sortOrder: service.sortOrder,
     category: service.category,
@@ -35,6 +38,40 @@ function generateSlug(name: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+async function deleteFileIfExists(url: string | null): Promise<void> {
+  if (!url) return;
+  try {
+    const filePath = path.join(process.cwd(), "public", url);
+    await fs.unlink(filePath);
+  } catch {
+    // File might not exist or already deleted
+  }
+  if (url.startsWith("/uploads/")) {
+    const dir = path.dirname(url);
+    const filename = path.basename(url);
+    const thumbPath = path.join(process.cwd(), "public", dir, `thumb-${filename}`);
+    try {
+      await fs.unlink(thumbPath);
+    } catch {
+      // Thumbnail might not exist
+    }
+  }
+}
+
+function extractImageUrls(html: string | null): string[] {
+  if (!html) return [];
+  const urls: string[] = [];
+  const regex = /<img[^>]+src="([^"]+)"/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    const src = match[1];
+    if (src.startsWith("/uploads/")) {
+      urls.push(src);
+    }
+  }
+  return urls;
 }
 
 export class ServiceService {
@@ -114,6 +151,7 @@ export class ServiceService {
       price: data.price,
       duration: data.duration,
       image: data.image,
+      video: data.video,
       sortOrder: data.sortOrder,
       isActive: data.isActive,
       category: { connect: { id: data.categoryId } },
@@ -138,6 +176,27 @@ export class ServiceService {
       }
     }
 
+    // Delete old image if a new one is provided and different
+    if (data.image !== undefined && data.image !== existing.image) {
+      await deleteFileIfExists(existing.image);
+    }
+
+    // Delete old video if a new one is provided and different
+    if (data.video !== undefined && data.video !== existing.video) {
+      await deleteFileIfExists(existing.video);
+    }
+
+    // Clean up removed description images
+    if (data.description !== undefined && data.description !== existing.description) {
+      const oldUrls = new Set(extractImageUrls(existing.description));
+      const newUrls = new Set(extractImageUrls(data.description));
+      for (const url of oldUrls) {
+        if (!newUrls.has(url)) {
+          await deleteFileIfExists(url);
+        }
+      }
+    }
+
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.slug !== undefined) updateData.slug = data.slug;
@@ -145,6 +204,7 @@ export class ServiceService {
     if (data.price !== undefined) updateData.price = data.price;
     if (data.duration !== undefined) updateData.duration = data.duration;
     if (data.image !== undefined) updateData.image = data.image;
+    if (data.video !== undefined) updateData.video = data.video;
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.categoryId !== undefined) {
@@ -159,6 +219,11 @@ export class ServiceService {
     const existing = await serviceRepository.findById(id);
     if (!existing) {
       throw AppError.notFound("Service not found");
+    }
+    await deleteFileIfExists(existing.image);
+    await deleteFileIfExists(existing.video);
+    for (const url of extractImageUrls(existing.description)) {
+      await deleteFileIfExists(url);
     }
     await serviceRepository.delete(id);
   }

@@ -12,7 +12,6 @@ import {
   Mail,
   MapPin,
   Clock,
-  Send,
   CheckCircle2,
   Scissors,
   ArrowLeft,
@@ -20,6 +19,7 @@ import {
   Heart,
   Star,
   Droplets,
+  PhoneCall,
   Sun,
 } from "lucide-react";
 import { Container } from "@/components/ui/Layout";
@@ -30,20 +30,16 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useCreateContactMessage } from "@/hooks/use-contact";
 import { useSettings } from "@/hooks/use-settings";
 
-const LeafletMap = dynamic(
-  () => import("@/components/map/LeafletMap").then((m) => m.LeafletMap),
-  { ssr: false }
-);
+const LeafletMap = dynamic(() => import("@/components/map/LeafletMap").then((m) => m.LeafletMap), {
+  ssr: false,
+});
 
 const contactSchema = z.object({
   name: z.string().min(2, "نام حداقل ۲ کاراکتر باشد"),
   email: z.string().email("ایمیل نامعتبر است"),
   phone: z.string().min(10, "شماره تلفن نامعتبر است").optional(),
   subject: z.string().max(200, "حداکثر ۲۰۰ کاراکتر").optional(),
-  message: z
-    .string()
-    .min(10, "پیام حداقل ۱۰ کاراکتر باشد")
-    .max(2000, "حداکثر ۲۰۰۰ کاراکتر"),
+  message: z.string().min(10, "پیام حداقل ۱۰ کاراکتر باشد").max(2000, "حداکثر ۲۰۰۰ کاراکتر"),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -83,7 +79,7 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: "تلفن",
-      value: settings?.salonPhone ?? "021-12345678",
+      value: settings?.salonPhone ?? "۰۲۱-۱۲۳۴۵۶۷۸",
       href: `tel:${settings?.salonPhone?.replace(/[^0-9+]/g, "") ?? "+02112345678"}`,
       accent: accentColors[0],
     },
@@ -199,7 +195,7 @@ export default function ContactPage() {
                 animate={{ rotate: [0, -15, 15, 0] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
               >
-                <Scissors className="w-4 h-4" />
+                <PhoneCall className="w-4 h-4" />
               </motion.div>
               <span>ارتباط با ما</span>
             </motion.div>
@@ -230,8 +226,8 @@ export default function ContactPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-lg text-ink-muted leading-relaxed max-w-xl mx-auto"
             >
-              سوالی دارید؟ می‌خواهید وقت رزرو کنید؟ یا فقط می‌خواهید با ما صحبت
-              کنید؟ ما منتظر شنیدن صدای شما هستیم.
+              سوالی دارید؟ می‌خواهید وقت رزرو کنید؟ یا فقط می‌خواهید با ما صحبت کنید؟ ما منتظر شنیدن
+              صدای شما هستیم.
             </motion.p>
 
             {/* Animated scroll indicator */}
@@ -241,9 +237,7 @@ export default function ContactPage() {
               transition={{ delay: 1.2 }}
               className="mt-12 flex flex-col items-center gap-2"
             >
-              <span className="text-xs text-ink-muted">
-                پایین اسکرول کنید
-              </span>
+              <span className="text-xs text-ink-muted">پایین اسکرول کنید</span>
               <motion.div
                 animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -331,15 +325,10 @@ export default function ContactPage() {
                         <h3 className="text-xl font-bold text-foreground mb-2">
                           پیام شما ارسال شد!
                         </h3>
-                        <p className="text-ink-muted">
-                          به زودی با شما تماس خواهیم گرفت.
-                        </p>
+                        <p className="text-ink-muted">به زودی با شما تماس خواهیم گرفت.</p>
                       </motion.div>
                     ) : (
-                      <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="space-y-5"
-                      >
+                      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         {[
                           {
                             key: "name",
@@ -371,7 +360,7 @@ export default function ContactPage() {
                                 <Input
                                   label="شماره تلفن"
                                   type="tel"
-                                  placeholder="09123456789"
+                                  placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                                   error={errors.phone?.message}
                                   {...register("phone")}
                                 />
@@ -400,11 +389,7 @@ export default function ContactPage() {
                           <motion.div
                             key={field.key}
                             initial={{ opacity: 0, y: 15 }}
-                            animate={
-                              formInView
-                                ? { opacity: 1, y: 0 }
-                                : {}
-                            }
+                            animate={formInView ? { opacity: 1, y: 0 } : {}}
                             transition={{
                               duration: 0.4,
                               delay: 0.4 + i * 0.1,
@@ -415,9 +400,7 @@ export default function ContactPage() {
                         ))}
                         <motion.div
                           initial={{ opacity: 0, y: 15 }}
-                          animate={
-                            formInView ? { opacity: 1, y: 0 } : {}
-                          }
+                          animate={formInView ? { opacity: 1, y: 0 } : {}}
                           transition={{ duration: 0.4, delay: 0.8 }}
                         >
                           <Button
@@ -449,21 +432,14 @@ export default function ContactPage() {
           </div>
 
           {/* Info + Map - Right Side (takes 3 cols) */}
-          <div
-            ref={infoSectionRef}
-            className="lg:col-span-3 order-1 lg:order-2 space-y-8"
-          >
+          <div ref={infoSectionRef} className="lg:col-span-3 order-1 lg:order-2 space-y-8">
             {/* Contact Info Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {contactInfo.map((info, i) => (
                 <motion.div
                   key={info.title}
                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={
-                    infoInView
-                      ? { opacity: 1, y: 0, scale: 1 }
-                      : {}
-                  }
+                  animate={infoInView ? { opacity: 1, y: 0, scale: 1 } : {}}
                   transition={{
                     duration: 0.5,
                     delay: i * 0.1,
@@ -486,11 +462,7 @@ export default function ContactPage() {
               <motion.div
                 id="map"
                 initial={{ opacity: 0, y: 40, scale: 0.97 }}
-                animate={
-                  mapInView
-                    ? { opacity: 1, y: 0, scale: 1 }
-                    : {}
-                }
+                animate={mapInView ? { opacity: 1, y: 0, scale: 1 } : {}}
                 transition={{
                   duration: 0.7,
                   delay: 0.2,
@@ -515,11 +487,7 @@ export default function ContactPage() {
                     className="p-4 bg-[var(--color-bg-soft)] flex items-center gap-3"
                   >
                     <motion.div
-                      animate={
-                        mapInView
-                          ? { scale: [0, 1.2, 1] }
-                          : {}
-                      }
+                      animate={mapInView ? { scale: [0, 1.2, 1] } : {}}
                       transition={{ duration: 0.5, delay: 0.8 }}
                       className="relative"
                     >
@@ -591,11 +559,7 @@ function InfoCard({
       <CardContent className="p-5 flex items-start gap-4">
         <motion.div
           initial={{ scale: 0, rotate: -45 }}
-          animate={
-            inView
-              ? { scale: 1, rotate: 0 }
-              : {}
-          }
+          animate={inView ? { scale: 1, rotate: 0 } : {}}
           transition={{
             type: "spring",
             bounce: 0.5,

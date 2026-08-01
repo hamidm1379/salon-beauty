@@ -1,38 +1,35 @@
 interface InstagramIconProps {
   className?: string;
-  size?: number;
 }
 
-export function InstagramIcon({ className, size = 28 }: InstagramIconProps) {
+export function InstagramIcon({ className }: InstagramIconProps) {
   return (
     <svg
-      width={size}
-      height={size}
       viewBox="0 0 64 64"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
       <rect
-        x="12"
-        y="12"
-        width="40"
-        height="40"
-        rx="13"
+        x="7"
+        y="7"
+        width="52"
+        height="52"
+        rx="15"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="3"
       />
       <circle
         cx="32"
         cy="32"
-        r="10"
+        r="13"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="3"
       />
       <circle
-        cx="43"
-        cy="21"
-        r="2.5"
+        cx="45.5"
+        cy="18.5"
+        r="3.2"
         fill="currentColor"
       />
     </svg>

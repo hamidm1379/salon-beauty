@@ -62,6 +62,7 @@
     "react-hook-form": "^7.83.0",
     "react-hot-toast": "^2.6.0",
     "react-leaflet": "^5.0.0",
+    "react-player": "^3.4.0",
     "sharp": "^0.35.3",
     "swiper": "^14.0.6",
     "tailwind-merge": "^3.6.0",

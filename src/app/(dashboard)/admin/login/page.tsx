@@ -4,10 +4,30 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Loader2, Shield } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Loader2, Shield, RefreshCw, Calculator } from "lucide-react";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
+import Link from "next/link";
+
+function generateCaptcha() {
+  const ops = ["+", "-", "×"] as const;
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a: number;
+  let b: number;
+  if (op === "-") {
+    a = Math.floor(Math.random() * 15) + 6;
+    b = Math.floor(Math.random() * a) + 1;
+  } else if (op === "×") {
+    a = Math.floor(Math.random() * 9) + 2;
+    b = Math.floor(Math.random() * 9) + 2;
+  } else {
+    a = Math.floor(Math.random() * 20) + 1;
+    b = Math.floor(Math.random() * 20) + 1;
+  }
+  const answer = op === "+" ? a + b : op === "-" ? a - b : a * b;
+  return { a, op, b, answer };
+}
 
 const loginSchema = z.object({
   username: z.string().min(1, "نام کاربری الزامی است"),
@@ -19,6 +39,15 @@ type LoginInput = z.infer<typeof loginSchema>;
 export default function AdminLoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [captcha, setCaptcha] = useState<ReturnType<typeof generateCaptcha>>(() => generateCaptcha());
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaError, setCaptchaError] = useState("");
+
+  const refreshCaptcha = useCallback(() => {
+    setCaptcha(generateCaptcha());
+    setCaptchaInput("");
+    setCaptchaError("");
+  }, []);
 
   const {
     register,
@@ -29,18 +58,27 @@ export default function AdminLoginPage() {
   });
 
   const onSubmit = async (data: LoginInput) => {
+    const answer = parseInt(captchaInput, 10);
+    if (isNaN(answer) || answer !== captcha.answer) {
+      setCaptchaError("پاسخ سوال صحیح نیست");
+      return;
+    }
+    setCaptchaError("");
+
     setIsLoading(true);
     try {
       await axiosInstance.post("/auth/login", data);
       toast.success("ورود موفقیت‌آمیز بود");
       router.push("/admin/dashboard");
       router.refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const message =
-        error?.response?.data?.message ||
-        error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
         "نام کاربری یا رمز عبور اشتباه است";
       toast.error(message);
+      refreshCaptcha();
     } finally {
       setIsLoading(false);
     }
@@ -101,6 +139,46 @@ export default function AdminLoginPage() {
               )}
             </div>
 
+            {/* Math CAPTCHA */}
+            <div className="bg-[var(--color-bg-soft)] rounded-xl p-4 border border-[var(--color-ink)]/5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-ink)]">
+                  <Calculator className="w-4 h-4 text-[var(--color-primary)]" />
+                  <span>تصویر امنیتی</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={refreshCaptcha}
+                  className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] transition-colors text-[var(--color-ink-muted)] hover:text-[var(--color-primary)]"
+                  aria-label="captcha refresh"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 text-center bg-[var(--color-bg)] rounded-xl py-3 border border-[var(--color-ink)]/8 select-none">
+                  <span className="text-lg font-bold text-[var(--color-ink)] tracking-wider">
+                    {captcha ? `${captcha.a} ${captcha.op} ${captcha.b} = ?` : "\u00A0"}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={captchaInput}
+                  onChange={(e) => {
+                    setCaptchaInput(e.target.value.replace(/[^0-9\-]/g, ""));
+                    setCaptchaError("");
+                  }}
+                  className="w-20 text-center px-3 py-3 rounded-xl border border-[var(--color-ink)]/10 bg-[var(--color-bg)] text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition text-sm font-bold"
+                  placeholder="پاسخ"
+                  autoComplete="off"
+                />
+              </div>
+              {captchaError && (
+                <p className="mt-2 text-sm text-red-500">{captchaError}</p>
+              )}
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
@@ -113,9 +191,9 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center mt-6 text-sm text-[var(--color-ink-muted)]">
-          <a href="/" className="text-[var(--color-primary)] hover:underline">
+          <Link href="/" className="text-[var(--color-primary)] hover:underline">
             بازگشت به سایت
-          </a>
+          </Link>
         </p>
       </div>
     </div>

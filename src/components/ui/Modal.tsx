@@ -66,12 +66,12 @@ export function Modal({ open, onClose, children, title, className }: ModalProps)
             transition={{ duration: 0.2, ease: "easeOut" }}
             tabIndex={-1}
             className={cn(
-              "relative w-full max-w-lg bg-white rounded-3xl shadow-2xl outline-none",
+              "relative w-full max-w-lg max-h-[90vh] bg-white rounded-3xl shadow-2xl outline-none flex flex-col",
               className
             )}
           >
             {title && (
-              <div className="flex items-center justify-between p-6 pb-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-ink)]/5 shrink-0">
                 <h2 className="text-lg font-semibold text-[var(--color-ink)]">{title}</h2>
                 <button
                   onClick={onClose}
@@ -82,7 +82,7 @@ export function Modal({ open, onClose, children, title, className }: ModalProps)
                 </button>
               </div>
             )}
-            <div className="p-6">{children}</div>
+            <div className="p-6 overflow-y-auto flex-1 overscroll-contain">{children}</div>
           </motion.div>
         </motion.div>
       )}

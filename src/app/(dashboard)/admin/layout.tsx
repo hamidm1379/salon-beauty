@@ -14,15 +14,13 @@ import {
   MessageSquare,
   LogOut,
   Menu,
-  Sun,
-  Moon,
   ChevronLeft,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/Button";
 import { Drawer } from "@/components/ui/Drawer";
 import { useAuth } from "@/hooks/use-auth";
-import { useTheme } from "next-themes";
 
 const sidebarLinks = [
   { href: "/admin/dashboard", label: "داشبورد", icon: LayoutDashboard },
@@ -31,8 +29,9 @@ const sidebarLinks = [
   { href: "/admin/gallery", label: "گالری", icon: Image },
   { href: "/admin/blog", label: "بلاگ", icon: FileText },
   { href: "/admin/contacts", label: "پیام‌ها", icon: Mail },
+  { href: "/admin/comments", label: "نظرات", icon: MessageSquare },
   { href: "/admin/users", label: "کاربران", icon: Users },
-  { href: "/admin/settings", label: "تنظیمات", icon: MessageSquare },
+  { href: "/admin/settings", label: "تنظیمات", icon: Settings },
 ];
 
 interface SidebarContentProps {
@@ -130,7 +129,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -202,18 +200,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              >
-                {theme === "dark" ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-              </Button>
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                <CalendarDays className="w-4 h-4" />
+                {new Date().toLocaleDateString("fa-IR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+              <span className="hidden sm:flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                {new Date().toLocaleTimeString("fa-IR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ExternalLink className="w-4 h-4" />
+                  <span className="hidden sm:inline">ورود به سایت</span>
+                </Button>
+              </Link>
             </div>
           </div>
         </header>

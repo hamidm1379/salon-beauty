@@ -1,5 +1,5 @@
 import { contactMessageService } from "@/services/contact-message.service";
-import { successResponse, handleApiError } from "@/utils/api-response";
+import { successResponse, errorResponse, handleApiError } from "@/utils/api-response";
 
 export async function GET(
   _request: Request,
@@ -8,6 +8,9 @@ export async function GET(
   try {
     const { id } = await params;
     const result = await contactMessageService.getById(id);
+    if (!result) {
+      return errorResponse("Contact message not found", 404);
+    }
     return successResponse(result);
   } catch (error) {
     return handleApiError(error);

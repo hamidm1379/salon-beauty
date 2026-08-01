@@ -4,10 +4,14 @@ import { useState } from "react";
 import {
   Trash2,
   Loader2,
+  Search,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Card, CardContent } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
 import { ResponsiveTable } from "@/components/admin/ResponsiveTable";
 import {
@@ -15,6 +19,12 @@ import {
   useUpdateUserRole,
   useDeleteUser,
 } from "@/hooks/use-admin-users";
+
+const roleOptions = [
+  { value: "", label: "همه نقش‌ها" },
+  { value: "ADMIN", label: "مدیر" },
+  { value: "EDITOR", label: "ویرایشگر" },
+];
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
@@ -48,16 +58,16 @@ export default function AdminUsersPage() {
     {
       key: "name",
       label: "نام",
-      render: (user: typeof users[0]) => (
+      render: (user: (typeof users)[0]) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
             <span className="text-[var(--color-primary)] font-medium">
               {user.name.charAt(0)}
             </span>
           </div>
-          <div>
-            <p className="font-medium text-[var(--color-ink)]">{user.name}</p>
-            <p className="text-xs text-[var(--color-ink-muted)]">{user.email}</p>
+          <div className="min-w-0">
+            <p className="font-medium text-[var(--color-ink)] truncate">{user.name}</p>
+            <p className="text-xs text-[var(--color-ink-muted)] truncate">{user.email}</p>
           </div>
         </div>
       ),
@@ -65,33 +75,40 @@ export default function AdminUsersPage() {
     {
       key: "role",
       label: "نقش",
-      render: (user: typeof users[0]) => (
-        <div className="flex items-center gap-2">
-          <select
-            value={user.role}
-            onChange={(e) => handleRoleChange(user.id, e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          >
-            <option value="ADMIN">مدیر</option>
-            <option value="EDITOR">ویرایشگر</option>
-          </select>
-        </div>
+      render: (user: (typeof users)[0]) => (
+        <select
+          value={user.role}
+          onChange={(e) => handleRoleChange(user.id, e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-white"
+        >
+          <option value="ADMIN">مدیر</option>
+          <option value="EDITOR">ویرایشگر</option>
+        </select>
       ),
     },
     {
       key: "phone",
       label: "تلفن",
-      render: (user: typeof users[0]) => (
-        <span className="text-[var(--color-ink-muted)]">
+      render: (user: (typeof users)[0]) => (
+        <span className="text-sm text-[var(--color-ink-muted)]">
           {user.phone || "-"}
         </span>
       ),
     },
     {
+      key: "status",
+      label: "وضعیت",
+      render: (user: (typeof users)[0]) => (
+        <Badge variant={user.role === "ADMIN" ? "success" : "default"}>
+          {user.role === "ADMIN" ? "مدیر" : "ویرایشگر"}
+        </Badge>
+      ),
+    },
+    {
       key: "createdAt",
       label: "تاریخ عضویت",
-      render: (user: typeof users[0]) => (
-        <span className="text-[var(--color-ink-muted)]">
+      render: (user: (typeof users)[0]) => (
+        <span className="text-sm text-[var(--color-ink-muted)]">
           {new Date(user.createdAt).toLocaleDateString("fa-IR")}
         </span>
       ),
@@ -99,7 +116,7 @@ export default function AdminUsersPage() {
     {
       key: "actions",
       label: "عملیات",
-      render: (user: typeof users[0]) => (
+      render: (user: (typeof users)[0]) => (
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -117,64 +134,44 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--color-ink)]">مدیریت کاربران</h1>
-        <div className="text-sm text-[var(--color-ink-muted)]">
-          کل: {usersData?.total || 0} کاربر
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center">
+            <Users className="w-5 h-5 text-[var(--color-primary)]" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--color-ink)]">مدیریت کاربران</h1>
+            <p className="text-sm text-[var(--color-ink-muted)]">
+              کل: {usersData?.total || 0} کاربر
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              placeholder="جستجو در کاربران..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setRoleFilter("");
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-ink-muted)]" />
+              <Input
+                placeholder="جستجو در نام یا ایمیل..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
                   setPage(1);
                 }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  !roleFilter
-                    ? "bg-[var(--color-primary)] text-white"
-                    : "bg-[var(--color-bg-soft)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10"
-                }`}
-              >
-                همه
-              </button>
-              <button
-                onClick={() => {
-                  setRoleFilter("ADMIN");
+                className="pr-10"
+              />
+            </div>
+            <div className="w-full sm:w-48">
+              <Select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value);
                   setPage(1);
                 }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  roleFilter === "ADMIN"
-                    ? "bg-[var(--color-primary)] text-white"
-                    : "bg-[var(--color-bg-soft)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10"
-                }`}
-              >
-                مدیران
-              </button>
-              <button
-                onClick={() => {
-                  setRoleFilter("EDITOR");
-                  setPage(1);
-                }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  roleFilter === "EDITOR"
-                    ? "bg-[var(--color-primary)] text-white"
-                    : "bg-[var(--color-bg-soft)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10"
-                }`}
-              >
-                ویرایشگران
-              </button>
+                options={roleOptions}
+              />
             </div>
           </div>
         </CardContent>

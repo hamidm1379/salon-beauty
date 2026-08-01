@@ -25,6 +25,10 @@ export class UserRepository {
   async update(id: string, data: Prisma.UserUpdateInput) {
     return prisma.user.update({ where: { id }, data });
   }
+
+  async delete(id: string) {
+    return prisma.user.delete({ where: { id } });
+  }
 }
 
 export const userRepository = new UserRepository();

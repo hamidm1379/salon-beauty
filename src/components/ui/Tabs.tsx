@@ -41,11 +41,9 @@ export function Tabs({ defaultValue, children, className }: TabsProps) {
     }
   }, []);
 
-  const getTabs = useCallback(() => tabsRef.current, []);
-
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab, registerTab }}>
-      <div className={className} data-tabs-getter={getTabs}>
+      <div className={className}>
         {children}
       </div>
     </TabsContext.Provider>

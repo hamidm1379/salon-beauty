@@ -6,7 +6,7 @@ import { ServicesHero } from "@/components/services/ServicesHero";
 import { BreadcrumbSchema } from "@/components/shared/JsonLd";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "خدمات ما",
@@ -14,27 +14,19 @@ export const metadata: Metadata = generateSEOMetadata({
   path: "/services",
 });
 
-export default async function ServicesPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let services: any[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let categories: any[] = [];
-  let total = 0;
+interface Props {
+  searchParams: Promise<{ category?: string }>;
+}
+
+export default async function ServicesPage({ searchParams }: Props) {
+  const { category } = await searchParams;
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
 
   try {
-    [services, categories, total] = await Promise.all([
-      prisma.service.findMany({
-        where: { isActive: true },
-        include: { category: { select: { id: true, name: true, slug: true } } },
-        orderBy: { sortOrder: "asc" },
-        take: 9,
-      }),
-      prisma.category.findMany({
-        where: { isActive: true },
-        orderBy: { sortOrder: "asc" },
-      }),
-      prisma.service.count({ where: { isActive: true } }),
-    ]);
+    categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+    });
   } catch {
     // Database not connected - render with empty data
   }
@@ -49,21 +41,12 @@ export default async function ServicesPage() {
       />
       <ServicesHero />
 
-      <section className="py-16 bg-[var(--color-bg-soft)] relative">
+      <section className="py-16 bg-[var(--color-bg-soft)] relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-[var(--color-primary)]/[0.04] blur-3xl" />
         <Container className="relative">
           <ServicesFilter
-            initialServices={{
-              items: services.map((s) => ({
-                ...s,
-                price: s.price,
-              })),
-              total,
-              page: 1,
-              limit: 9,
-              totalPages: Math.ceil(total / 9),
-            }}
             categories={categories}
+            categorySlug={category}
           />
         </Container>
       </section>

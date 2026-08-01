@@ -59,7 +59,7 @@ export default function BlogPage() {
     <>
       <BlogHero />
 
-      <section className="py-16 bg-[var(--color-bg-soft)] relative">
+      <section className="py-16 bg-[var(--color-bg-soft)] relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-[var(--color-primary)]/[0.04] blur-3xl" />
 
         <Container className="relative">
@@ -84,38 +84,22 @@ export default function BlogPage() {
                 aria-label="جستجو در مقالات"
               />
             </div>
-            <div className="flex gap-2 flex-wrap items-center">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setSelectedCategory("");
+            <div className="flex gap-4 items-center">
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
                   setPage(1);
                 }}
-                className={`px-5 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
-                  !selectedCategory
-                    ? "bg-[var(--color-primary)] text-white shadow-[0_4px_14px_0_rgba(124,58,237,0.39)]"
-                    : "bg-[var(--color-bg)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10 border border-[var(--color-ink)]/10"
-                }`}
+                className="w-full md:w-auto px-5 py-3 rounded-2xl text-sm font-medium bg-[var(--color-bg)] text-[var(--color-ink)] border border-[var(--color-ink)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]/40 transition-all duration-300 shadow-[0_4px_20px_-8px_rgba(124,58,237,0.08)] appearance-none cursor-pointer"
               >
-                همه
-              </motion.button>
-              {categories.map((cat) => (
-                <motion.button
-                  key={cat.id}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setPage(1);
-                  }}
-                  className={`px-5 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
-                    selectedCategory === cat.id
-                      ? "bg-[var(--color-primary)] text-white shadow-[0_4px_14px_0_rgba(124,58,237,0.39)]"
-                      : "bg-[var(--color-bg)] text-[var(--color-ink)] hover:bg-[var(--color-primary)]/10 border border-[var(--color-ink)]/10"
-                  }`}
-                >
-                  {cat.name}
-                </motion.button>
-              ))}
+                <option value="">همه دسته‌بندی‌ها</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </motion.div>
 
@@ -226,9 +210,8 @@ export default function BlogPage() {
                             )}
 
                             <div className="mt-auto pt-2">
-                              <span className="inline-flex items-center text-sm font-medium text-[var(--color-primary)] group-hover:gap-2 transition-all duration-300">
+                              <span className="inline-flex items-center justify-center w-full py-2.5 rounded-xl border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 text-sm font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-all duration-300">
                                 ادامه مطلب
-                                <span className="mr-1 group-hover:mr-0 group-hover:translate-x-[-4px] transition-all duration-300">←</span>
                               </span>
                             </div>
                           </div>

@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs/promises";
 import { categoryRepository, type CategoryWithCount } from "@/repositories/category.repository";
 import { AppError } from "@/lib/errors";
 import {
@@ -33,6 +35,26 @@ function generateSlug(name: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+async function deleteFileIfExists(url: string | null): Promise<void> {
+  if (!url) return;
+  try {
+    const filePath = path.join(process.cwd(), "public", url);
+    await fs.unlink(filePath);
+  } catch {
+    // File might not exist or already deleted
+  }
+  if (url.startsWith("/uploads/")) {
+    const dir = path.dirname(url);
+    const filename = path.basename(url);
+    const thumbPath = path.join(process.cwd(), "public", dir, `thumb-${filename}`);
+    try {
+      await fs.unlink(thumbPath);
+    } catch {
+      // Thumbnail might not exist
+    }
+  }
 }
 
 export class CategoryService {
@@ -129,6 +151,11 @@ export class CategoryService {
       }
     }
 
+    // Delete old image if a new one is provided and different
+    if (data.image !== undefined && data.image !== existing.image) {
+      await deleteFileIfExists(existing.image);
+    }
+
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.slug !== undefined) updateData.slug = data.slug;
@@ -146,6 +173,7 @@ export class CategoryService {
     if (!existing) {
       throw AppError.notFound("Category not found");
     }
+    await deleteFileIfExists(existing.image);
     await categoryRepository.delete(id);
   }
 }

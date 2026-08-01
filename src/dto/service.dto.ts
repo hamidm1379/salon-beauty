@@ -10,10 +10,11 @@ export const CreateServiceSchema = z.object({
     .max(200)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format")
     .optional(),
-  description: z.string().max(1000).optional(),
+  description: z.string().max(100000).optional(),
   price: z.number().positive("Price must be positive"),
   duration: z.number().int().positive("Duration must be a positive integer"),
-  image: z.string().url("Invalid URL").optional().nullable(),
+  image: z.string().max(500).optional().nullable(),
+  video: z.string().max(500).optional().nullable(),
   categoryId: z.string().cuid("Invalid category ID"),
   sortOrder: z.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
@@ -47,6 +48,7 @@ export interface ServiceResponseDTO {
   price: number;
   duration: number;
   image: string | null;
+  video: string | null;
   isActive: boolean;
   sortOrder: number;
   category: {

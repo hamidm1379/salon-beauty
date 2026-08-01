@@ -33,7 +33,6 @@ export function useUpdateSettings() {
     mutationFn: updateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      toast.success("تنظیمات با موفقیت بروزرسانی شد");
     },
     onError: (error: Error) => {
       toast.error(error.message || "خطا در بروزرسانی تنظیمات");

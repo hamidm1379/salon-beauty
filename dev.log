@@ -1,0 +1,58 @@
+
+> salon@0.1.0 dev
+> next dev --turbopack
+
+▲ Next.js 16.2.11 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.102:3000
+- Environments: .env
+✓ Ready in 630ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ GET /api/comments?serviceId=test 200 in 740ms (next.js: 498ms, proxy.ts: 81ms, application-code: 160ms)
+Unexpected error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].comment.create()` invocation in
+E:\salon\.next\dev\server\chunks\[root-of-the-server]__06uzqqs._.js:464:153
+
+  461     return __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].comment.count(args);
+  462 }
+  463 async create(data) {
+→ 464     return __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].comment.create(
+An operation failed because it depends on one or more records that were required but not found. No 'Service' record (needed to inline the relation on 'Comment' record(s)) was found for a nested connect on one-to-many relation 'CommentToService'.
+    at <unknown> (src\repositories\comment.repository.ts:22:27)
+    at async POST (src\app\api\comments\route.ts:23:20)
+  20 |
+  21 |   async create(data: Prisma.CommentCreateInput) {
+> 22 |     return prisma.comment.create({ data, include: { service: { select: { id: true, name: t...
+     |                           ^
+  23 |   }
+  24 |
+  25 |   async update(id: string, data: Prisma.CommentUpdateInput) { {
+  code: 'P2025',
+  meta: {
+    modelName: 'Comment',
+    model: 'Service',
+    relation: 'CommentToService',
+    relationType: 'one-to-many',
+    operation: 'a nested connect',
+    neededFor: "inline the relation on 'Comment' record(s)"
+  },
+  clientVersion: '7.9.0'
+}
+ POST /api/comments 500 in 278ms (next.js: 5ms, proxy.ts: 8ms, application-code: 265ms)
+ GET /api/services?limit=1 200 in 373ms (next.js: 345ms, proxy.ts: 4ms, application-code: 24ms)
+ POST /api/comments 201 in 63ms (next.js: 4ms, proxy.ts: 5ms, application-code: 53ms)
+○ Compiling /admin/dashboard ...
+ GET /api/comments?serviceId=cms8oosak000pbouvrm2x5mpd 200 in 17ms (next.js: 4ms, proxy.ts: 4ms, application-code: 9ms)
+ GET /admin/dashboard 200 in 5.1s (next.js: 4.6s, proxy.ts: 9ms, application-code: 453ms)
+ GET /api/dashboard 200 in 428ms (next.js: 390ms, proxy.ts: 9ms, application-code: 29ms)
+ GET /api/auth/me 200 in 431ms (next.js: 324ms, proxy.ts: 6ms, application-code: 101ms)
+ GET /contact 200 in 1378ms (next.js: 1137ms, application-code: 242ms)
+ GET /api/settings 200 in 219ms (next.js: 200ms, proxy.ts: 6ms, application-code: 14ms)
+ GET /api/categories?isActive=true&limit=100&sortBy=sortOrder&sortOrder=asc 200 in 337ms (next.js: 310ms, proxy.ts: 5ms, application-code: 22ms)
+ GET /services 200 in 1200ms (next.js: 1059ms, application-code: 140ms)
+ GET /services/manicure 200 in 1676ms (next.js: 1424ms, application-code: 252ms)
+ GET /api/settings 200 in 19ms (next.js: 6ms, proxy.ts: 5ms, application-code: 8ms)
+ GET /api/categories?isActive=true&limit=100&sortBy=sortOrder&sortOrder=asc 200 in 28ms (next.js: 16ms, proxy.ts: 5ms, application-code: 7ms)
+ GET /api/comments?serviceId=cms8oosak000pbouvrm2x5mpd&isApproved=true&limit=100 200 in 17ms (next.js: 4ms, proxy.ts: 3ms, application-code: 10ms)
+ GET / 200 in 979ms (next.js: 935ms, application-code: 44ms)

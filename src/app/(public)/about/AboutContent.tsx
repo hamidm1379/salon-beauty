@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Container } from "@/components/ui/Layout";
 import LineUnder from "@/components/home/LineUnder";
 import { Sparkles, Star, Heart, Gem } from "lucide-react";
@@ -364,11 +363,12 @@ export function AboutContent() {
                 >
                   {v.image ? (
                     <div className="w-14 h-14 rounded-2xl overflow-hidden mx-auto mb-5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={v.image}
                         alt={v.title}
-                        width={56}
-                        height={56}
+                        width={100}
+                        height={100}
                         className="w-full h-full object-cover"
                       />
                     </div>

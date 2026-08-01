@@ -14,6 +14,7 @@ import {
 import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { useSettings } from "@/hooks/use-settings";
 import { useCategories } from "@/hooks/use-categories";
+import { toPersianNumbers } from "@/utils/persian";
 
 interface UsefulLink {
   label: string;
@@ -95,19 +96,19 @@ export function Footer() {
             {salonAddress && (
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-[var(--color-primary)]" />
-                <span>{salonAddress}</span>
+                <span>{toPersianNumbers(salonAddress)}</span>
               </li>
             )}
             {salonPhone && (
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 shrink-0 text-[var(--color-primary)]" />
-                <span dir="ltr">{salonPhone}</span>
+                <Phone className="w-4 h-4 shrink-0 text-primary" />
+                <span dir="ltr">{toPersianNumbers(salonPhone)}</span>
               </li>
             )}
             {salonMobile && (
               <li className="flex items-center gap-2">
                 <Smartphone className="w-4 h-4 shrink-0 text-[var(--color-primary)]" />
-                <span dir="ltr">{salonMobile}</span>
+                <span dir="ltr">{toPersianNumbers(salonMobile)}</span>
               </li>
             )}
             {salonEmail && (
@@ -126,7 +127,10 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-[var(--color-ink-muted)]">
               {services.map((s) => (
                 <li key={s.id}>
-                  <a href={`/services#${s.slug}`} className="hover:text-[var(--color-primary)] transition">
+                  <a
+                    href={`/services#${s.slug}`}
+                    className="hover:text-[var(--color-primary)] transition"
+                  >
                     {s.name}
                   </a>
                 </li>
@@ -213,7 +217,12 @@ export function Footer() {
                 strokeWidth="1.1"
                 strokeLinecap="round"
               />
-              <path d="M27,58 C46,38 24,20 45,2" stroke="white" strokeWidth="1.1" strokeLinecap="round" />
+              <path
+                d="M27,58 C46,38 24,20 45,2"
+                stroke="white"
+                strokeWidth="1.1"
+                strokeLinecap="round"
+              />
               <path d="M32,48 C 38,44 40,39 44,33 C 40,41 36,45 32,48 Z" fill="white" />
               <path d="M40,28 C 46,23 48,18 52,12 C 48,20 44,25 40,28 Z" fill="white" />
             </pattern>
@@ -221,7 +230,7 @@ export function Footer() {
           <rect width="600" height="100" fill="url(#footerLeaf)" />
         </svg>
 
-        <div className="relative max-w-7xl mx-auto px-6 py-5 flex items-center justify-between text-xs">
+        <div className="relative max-w-7xl mx-auto px-6 py-5 flex items-center justify-between sm:text-xs text-[10px]">
           <button
             aria-label="بازگشت به بالا"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -229,7 +238,9 @@ export function Footer() {
           >
             <ChevronUp className="w-4 h-4" />
           </button>
-          <p>© 2025 {salonName} تمامی حقوق محفوظ است</p>
+          <p>
+            © {toPersianNumbers(2025)} {salonName} تمامی حقوق محفوظ است
+          </p>
         </div>
       </div>
     </footer>

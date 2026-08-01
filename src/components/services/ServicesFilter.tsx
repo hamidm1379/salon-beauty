@@ -2,20 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, Paintbrush } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import { Pagination } from "@/components/ui/Pagination";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.08, ease: "easeOut" as const },
-  }),
-};
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -67,17 +59,30 @@ interface ServicesResponse {
 }
 
 interface ServicesFilterProps {
-  initialServices: ServicesResponse;
   categories: Category[];
+  categorySlug?: string;
 }
 
-export function ServicesFilter({ initialServices, categories }: ServicesFilterProps) {
+export function ServicesFilter({ categories, categorySlug }: ServicesFilterProps) {
+  const router = useRouter();
+  const initialCategoryId = categorySlug
+    ? categories.find((c) => c.slug === categorySlug)?.id ?? ""
+    : "";
+
   const [search, setSearch] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [categoryId, setCategoryId] = useState(initialCategoryId);
   const [page, setPage] = useState(1);
   const limit = 9;
 
-  const { data, isLoading } = useQuery({
+  const handleCategoryChange = (newCategoryId: string) => {
+    setCategoryId(newCategoryId);
+    setPage(1);
+    const slug = categories.find((c) => c.id === newCategoryId)?.slug;
+    const url = slug ? `/services?category=${slug}` : "/services";
+    router.replace(url, { scroll: false });
+  };
+
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["services", { search, categoryId, page, limit }],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -88,7 +93,7 @@ export function ServicesFilter({ initialServices, categories }: ServicesFilterPr
       const { data } = await axiosInstance.get(`/services?${params.toString()}`);
       return data.data as ServicesResponse;
     },
-    initialData: initialServices,
+    placeholderData: keepPreviousData,
   });
 
   return (
@@ -115,7 +120,7 @@ export function ServicesFilter({ initialServices, categories }: ServicesFilterPr
           <SlidersHorizontal className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-primary)]/60 pointer-events-none" aria-hidden="true" />
           <select
             value={categoryId}
-            onChange={(e) => { setCategoryId(e.target.value); setPage(1); }}
+            onChange={(e) => handleCategoryChange(e.target.value)}
             className="appearance-none pl-10 pr-10 py-3.5 rounded-2xl border border-[var(--color-ink)]/10 bg-[var(--color-bg)] text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30 focus:border-[var(--color-primary)]/40 transition-all duration-300 shadow-[0_4px_20px_-8px_rgba(124,58,237,0.08)] cursor-pointer"
             aria-label="دسته‌بندی خدمات"
           >
@@ -152,7 +157,7 @@ export function ServicesFilter({ initialServices, categories }: ServicesFilterPr
               </motion.div>
             ))}
           </motion.div>
-        ) : data.items.length === 0 ? (
+        ) : !data || data.items.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -176,9 +181,10 @@ export function ServicesFilter({ initialServices, categories }: ServicesFilterPr
             initial="hidden"
             animate="visible"
             exit="exit"
+            className={isFetching ? "opacity-50 pointer-events-none" : "transition-opacity duration-300"}
           >
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data.items.map((service, i) => (
+              {data?.items.map((service, i) => (
                 <motion.a
                   key={service.id}
                   href={`/services/${service.slug}`}
@@ -212,15 +218,15 @@ export function ServicesFilter({ initialServices, categories }: ServicesFilterPr
                     <h3 className="text-lg font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-primary)] transition-colors duration-300">
                       {service.name}
                     </h3>
-                    <p className="text-sm text-[var(--color-ink-muted)] mt-2 line-clamp-2 leading-relaxed">
-                      {service.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--color-ink)]/5">
-                      <span className="text-lg font-bold text-[var(--color-primary)]">${service.price}</span>
-                      <span className="text-xs text-[var(--color-ink-muted)] bg-[var(--color-bg-soft)] px-3 py-1 rounded-full">
-                        {service.duration} دقیقه
-                      </span>
-                    </div>
+                    <p
+                      className="text-sm text-[var(--color-ink-muted)] mt-2 line-clamp-3 leading-relaxed"
+                      dangerouslySetInnerHTML={{
+                        __html: service.description?.replace(/<[^>]*>/g, "") || "",
+                      }}
+                    />
+                    <span className="inline-flex items-center text-sm font-medium text-[var(--color-primary)] mt-4 mb-2 float-left px-3 py-1.5 rounded-full bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 transition-all duration-300">
+                      توضیحات بیشتر
+                    </span>
                   </div>
                 </motion.a>
               ))}
@@ -232,8 +238,8 @@ export function ServicesFilter({ initialServices, categories }: ServicesFilterPr
               transition={{ delay: 0.4, duration: 0.4 }}
             >
               <Pagination
-                currentPage={data.page}
-                totalPages={data.totalPages}
+                currentPage={data?.page ?? 1}
+                totalPages={data?.totalPages ?? 1}
                 onPageChange={setPage}
                 className="mt-12"
               />

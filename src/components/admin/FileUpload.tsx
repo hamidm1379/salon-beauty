@@ -141,7 +141,7 @@ export function FileUpload({
               </p>
               <p className="text-xs text-[var(--color-ink-muted)]/60 flex items-center gap-1">
                 <Film className="w-3 h-3" />
-                تصاویر (تا ۱۰MB) و ویدیوها (تا ۵۰MB)
+                تصاویر (تا ۱۰MB) و ویدیوها (تا ۱GB)
               </p>
             </>
           )}

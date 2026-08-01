@@ -12,6 +12,7 @@ const defaultSettings: SettingsData = {
   salonMobile: "0912-123-4567",
   salonEmail: "info@beautysalon.com",
   workingHours: "شنبه تا پنجشنبه ۹ الی ۲۱",
+  logoUrl: "",
   footerDescription: "ما در سالن زیبایی، با ارائه خدمات متنوع و باکیفیت، زیبایی طبیعی شما را به بهترین شکل ممکن نمایان می‌کنیم.",
   footerUsefulLinks: JSON.stringify([
     { label: "اخبار و مقالات", href: "/blog" },
@@ -27,9 +28,14 @@ const defaultSettings: SettingsData = {
   ]),
   instagram: "https://instagram.com/beautysalon",
   telegram: "https://t.me/beautysalon",
+  whatsapp: "",
+  rubika: "",
+  bale: "",
   seoTitle: "Beauty Salon - بهترین سالن زیبایی",
   seoDescription: "سالن زیبایی با بهترین خدمات و متخصصین",
   seoKeywords: "سالن زیبایی, آرایشگاه, زیبایی, مو, پوست",
+  seoOgImage: "",
+  seoFavicon: "",
 };
 
 export async function GET() {

@@ -2,6 +2,7 @@ import {
   galleryRepository,
   type GalleryWithRelations,
 } from "@/repositories/gallery.repository";
+import { uploadService } from "@/services/upload.service";
 import type {
   CreateGalleryInput,
   ListGalleryInput,
@@ -60,6 +61,13 @@ export class GalleryService {
       throw AppError.notFound("Gallery item not found");
     }
 
+    // Delete old image if replaced
+    if (input.imageId !== undefined && input.imageId !== existing.imageId) {
+      if (existing.imageId) {
+        await uploadService.deleteImage(existing.imageId);
+      }
+    }
+
     const data: Record<string, unknown> = {};
     if (input.title !== undefined) data.title = input.title;
     if (input.description !== undefined) data.description = input.description;
@@ -77,6 +85,12 @@ export class GalleryService {
     if (!existing) {
       throw AppError.notFound("Gallery item not found");
     }
+
+    // Delete associated image file and record
+    if (existing.imageId) {
+      await uploadService.deleteImage(existing.imageId);
+    }
+
     await galleryRepository.delete(id);
   }
 }

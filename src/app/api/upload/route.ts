@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { uploadService } from "@/services/upload.service";
 import { successResponse } from "@/utils/api-response";
 
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/png",
@@ -14,7 +17,7 @@ const ALLOWED_TYPES = [
 ];
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 1024 * 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
     const isVideo = file.type.startsWith("video/");
     const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
     if (file.size > maxSize) {
-      const limitMB = isVideo ? 50 : 10;
+      const limitMB = isVideo ? 1024 : 10;
       return NextResponse.json(
         { success: false, message: `File size exceeds ${limitMB}MB limit` },
         { status: 400 }

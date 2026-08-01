@@ -27,3 +27,16 @@ export async function PATCH(
     return handleApiError(error);
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    await userService.delete(id);
+    return successResponse(null, "User deleted successfully");
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

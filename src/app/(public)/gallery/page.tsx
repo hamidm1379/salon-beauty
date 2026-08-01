@@ -20,13 +20,13 @@ export default async function GalleryPage() {
     id: string;
     title: string;
     description: string | null;
-    image: { id: string; url: string; alt: string | null } | null;
+    image: { id: string; url: string; type: string | null; alt: string | null } | null;
   }[] = [];
 
   try {
     items = await prisma.gallery.findMany({
       where: { isActive: true },
-      include: { image: true },
+      include: { image: { select: { id: true, url: true, type: true, alt: true } } },
       orderBy: { sortOrder: "asc" },
     });
   } catch {
@@ -66,7 +66,7 @@ export default async function GalleryPage() {
 
       <GalleryHero />
 
-      <section className="py-16 bg-[var(--color-bg-soft)] relative">
+      <section className="py-16 bg-[var(--color-bg-soft)] relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-[var(--color-primary)]/[0.04] blur-3xl" />
 
         <Container className="relative">
