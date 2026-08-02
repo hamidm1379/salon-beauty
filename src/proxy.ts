@@ -41,8 +41,8 @@ function isAdminOnlyPath(pathname: string) {
   return matchesAny(pathname, routes.adminOnly);
 }
 
-/* ─── Middleware ─── */
-export async function middleware(request: NextRequest) {
+/* ─── Proxy ─── */
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { method } = request;
   const origin = request.nextUrl.origin;
