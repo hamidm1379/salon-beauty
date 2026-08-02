@@ -138,7 +138,7 @@ export function GalleryGrid({ items }: GalleryGridProps) {
           variants={container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4"
         >
           {activeItems.map((galleryItem, index) => (
             <motion.article

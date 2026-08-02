@@ -21,7 +21,7 @@ const images = [
 
 export function GallerySlider() {
   return (
-    <section className="py-20 bg-[var(--color-bg-soft)] relative overflow-hidden">
+    <section className="py-10 sm:py-20 bg-bg-soft relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <motion.div
@@ -29,7 +29,7 @@ export function GallerySlider() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-6 sm:mb-8 md:mb-12"
         >
           <h2 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-[var(--color-ink)] mb-4">
             گالری{" "}
@@ -47,12 +47,12 @@ export function GallerySlider() {
           modules={[Navigation, Autoplay]}
           navigation
           autoplay={{ delay: 4000, disableOnInteraction: false }}
-          spaceBetween={12}
-          slidesPerView={1.5}
+          spaceBetween={10}
+          slidesPerView={2}
           breakpoints={{
-            480: { slidesPerView: 2, spaceBetween: 16 },
-            768: { slidesPerView: 4 },
-            1024: { slidesPerView: 5 },
+            480: { slidesPerView: 2, spaceBetween: 12 },
+            768: { slidesPerView: 4, spaceBetween: 16 },
+            1024: { slidesPerView: 5, spaceBetween: 16 },
           }}
           dir="rtl"
           className="gallery-swiper"
@@ -64,7 +64,7 @@ export function GallerySlider() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="group relative h-[280px] sm:h-[320px] rounded-2xl overflow-hidden cursor-pointer"
+                className="group relative h-[160px] sm:h-[200px] lg:h-[260px] rounded-2xl overflow-hidden cursor-pointer"
               >
                 <Image
                   src={src}
@@ -75,7 +75,7 @@ export function GallerySlider() {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 inset-x-0 p-4">
                     <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <svg

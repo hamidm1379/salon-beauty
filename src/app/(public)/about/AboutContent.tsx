@@ -347,7 +347,7 @@ export function AboutContent() {
             </div>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 lg:gap-8">
             {values.map((v, i) => {
               const Icon = v.icon;
               return (
@@ -359,10 +359,10 @@ export function AboutContent() {
                   viewport={{ once: true, margin: "-40px" }}
                   custom={i}
                   whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                  className="bg-[var(--color-bg)] rounded-3xl p-8 border border-[var(--color-ink)]/5 shadow-[0_8px_30px_-12px_rgba(124,58,237,0.08)] text-center"
+                  className="bg-background rounded-2xl lg:rounded-3xl p-3 lg:p-8 border border-(--color-ink)/5 shadow-[0_8px_30px_-12px_rgba(124,58,237,0.08)] text-center"
                 >
                   {v.image ? (
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden mx-auto mb-5">
+                    <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-xl lg:rounded-2xl overflow-hidden mx-auto mb-1 lg:mb-5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={v.image}
@@ -373,14 +373,14 @@ export function AboutContent() {
                       />
                     </div>
                   ) : (
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center mx-auto mb-5">
-                      <Icon className="w-7 h-7 text-[var(--color-primary)]" />
+                    <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-xl lg:rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center mx-auto mb-3 lg:mb-5">
+                      <Icon className="w-7 h-7 lg:w-10 lg:h-10 text-[var(--color-primary)]" />
                     </div>
                   )}
-                  <h3 className="font-semibold text-lg text-[var(--color-ink)]">
+                  <h3 className="font-semibold text-sm lg:text-lg text-foreground leading-snug">
                     {v.title}
                   </h3>
-                  <p className="text-sm text-[var(--color-ink-muted)] mt-3 leading-relaxed">
+                  <p className="text-[10px] lg:text-sm text-ink-muted mt-0.5 lg:mt-3 leading-relaxed">
                     {v.desc}
                   </p>
                 </motion.div>

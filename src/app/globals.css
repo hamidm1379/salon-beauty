@@ -13,19 +13,6 @@
   --color-gold-accent: #c9a227;
 }
 
-/* ── Dark Mode ── */
-.dark {
-  --color-bg: #120e18;
-  --color-bg-soft: #1a1523;
-  --color-primary: #a78bfa;
-  --color-primary-soft: #7c3aed;
-  --color-gradient-from: #1a1523;
-  --color-gradient-to: #120e18;
-  --color-ink: #f3f4f6;
-  --color-ink-muted: #9ca3af;
-  --color-gold-accent: #d4a843;
-}
-
 @theme inline {
   --color-background: var(--color-bg);
   --color-foreground: var(--color-ink);

@@ -21,8 +21,7 @@ export {
   AlertTriangle,
   Info,
   Loader2,
-  Sun,
-  Moon,
+
   User,
   Users,
   Settings,
@@ -64,6 +63,5 @@ export {
   Folder,
   FolderOpen,
   Cloud,
-  SunMedium,
   Zap,
 } from "lucide-react";
