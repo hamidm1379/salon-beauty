@@ -11,7 +11,10 @@ import {
   MapPin,
   ChevronUp,
 } from "lucide-react";
+import Image from "next/image";
 import { InstagramIcon } from "@/components/ui/InstagramIcon";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { RubikaIcon } from "@/components/ui/RubikaIcon";
 import { useSettings } from "@/hooks/use-settings";
 import { useCategories } from "@/hooks/use-categories";
 import { toPersianNumbers } from "@/utils/persian";
@@ -21,25 +24,20 @@ interface UsefulLink {
   href: string;
 }
 
-interface SocialLink {
-  platform: string;
-  url: string;
-}
-
 const socialIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  website: Globe,
-  telegram: Send,
-  whatsapp: MessageCircle,
   instagram: InstagramIcon,
-  smartphone: Smartphone,
+  telegram: Send,
+  whatsapp: WhatsAppIcon,
+  rubika: RubikaIcon,
+  bale: MessageCircle,
 };
 
 const socialLabels: Record<string, string> = {
-  website: "وب‌سایت",
+  instagram: "اینستاگرام",
   telegram: "تلگرام",
   whatsapp: "واتساپ",
-  instagram: "اینستاگرام",
-  smartphone: "موبایل",
+  rubika: "روبیکا",
+  bale: "بله",
 };
 
 function parseJsonSetting<T>(value: string | undefined, fallback: T): T {
@@ -56,6 +54,7 @@ export function Footer() {
   const { data: categoriesData } = useCategories();
 
   const salonName = settings?.salonName ?? "Beauty Salon";
+  const logoUrl = settings?.logoUrl ?? "";
   const footerDescription = settings?.footerDescription ?? "";
   const salonAddress = settings?.salonAddress ?? "";
   const salonPhone = settings?.salonPhone ?? "";
@@ -63,7 +62,14 @@ export function Footer() {
   const salonEmail = settings?.salonEmail ?? "";
 
   const usefulLinks = parseJsonSetting<UsefulLink[]>(settings?.footerUsefulLinks, []);
-  const socialLinks = parseJsonSetting<SocialLink[]>(settings?.socialLinks, []);
+
+  const socialPlatforms: Array<{ key: string; url: string }> = [
+    { key: "instagram", url: settings?.instagram ?? "" },
+    { key: "telegram", url: settings?.telegram ?? "" },
+    { key: "whatsapp", url: settings?.whatsapp ?? "" },
+    { key: "rubika", url: settings?.rubika ?? "" },
+    { key: "bale", url: settings?.bale ?? "" },
+  ].filter((item) => item.url !== "");
 
   const services = categoriesData?.items ?? [];
 
@@ -73,9 +79,19 @@ export function Footer() {
         {/* لوگو */}
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-11 h-11 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
-              <Flower2 className="w-6 h-6 text-[var(--color-primary)]" />
-            </div>
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt={salonName}
+                width={44}
+                height={44}
+                className="rounded-full object-contain"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+                <Flower2 className="w-6 h-6 text-[var(--color-primary)]" />
+              </div>
+            )}
             <div className="leading-tight">
               <p className="font-bold text-[var(--color-ink)] tracking-wide">{salonName}</p>
               <p className="text-[10px] tracking-[0.3em] text-[var(--color-ink-muted)]">SALON</p>
@@ -177,19 +193,19 @@ export function Footer() {
             ما را در شبکه‌های اجتماعی دنبال کنید
           </p>
           <div className="flex gap-3 mt-3" role="list" aria-label="شبکه‌های اجتماعی">
-            {socialLinks.map(({ platform, url }) => {
-              const Icon = socialIcons[platform] ?? Globe;
-              const label = socialLabels[platform] ?? platform;
+            {socialPlatforms.map(({ key, url }) => {
+              const Icon = socialIcons[key] ?? Globe;
+              const label = socialLabels[key] ?? key;
               return (
                 <a
-                  key={platform}
+                  key={key}
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-full border border-[var(--color-primary)]/30 text-[var(--color-primary)] flex items-center justify-center hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)] transition"
                 >
-                  <Icon className="w-4 h-4" aria-hidden="true" />
+                  <Icon className="w-5 h-5" aria-hidden="true" />
                 </a>
               );
             })}
@@ -239,7 +255,7 @@ export function Footer() {
             <ChevronUp className="w-4 h-4" />
           </button>
           <p>
-            © {toPersianNumbers(2025)} {salonName} تمامی حقوق محفوظ است
+            © {toPersianNumbers(new Date().getFullYear())} {salonName} تمامی حقوق محفوظ است
           </p>
         </div>
       </div>

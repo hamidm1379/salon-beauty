@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { successResponse, handleApiError } from "@/utils/api-response";
+import { resetSettingsCache } from "@/lib/site-settings";
 
 interface SettingsData {
   [key: string]: string;
@@ -13,6 +14,9 @@ const defaultSettings: SettingsData = {
   salonEmail: "info@beautysalon.com",
   workingHours: "شنبه تا پنجشنبه ۹ الی ۲۱",
   logoUrl: "",
+  bannerUrl: "",
+  bannerText: "",
+  bannerTextSecondary: "",
   footerDescription: "ما در سالن زیبایی، با ارائه خدمات متنوع و باکیفیت، زیبایی طبیعی شما را به بهترین شکل ممکن نمایان می‌کنیم.",
   footerUsefulLinks: JSON.stringify([
     { label: "اخبار و مقالات", href: "/blog" },
@@ -68,6 +72,8 @@ export async function PUT(request: Request) {
     );
 
     await Promise.all(upsertPromises);
+
+    resetSettingsCache();
 
     return successResponse(body, "Settings updated successfully");
   } catch (error) {

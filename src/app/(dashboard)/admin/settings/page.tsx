@@ -23,6 +23,9 @@ const settingsSchema = z.object({
   salonEmail: z.string().email("ایمیل نامعتبر است").optional().or(z.literal("")),
   workingHours: z.string().optional(),
   logoUrl: z.string().optional(),
+  bannerUrl: z.string().optional(),
+  bannerText: z.string().optional(),
+  bannerTextSecondary: z.string().optional(),
   instagram: z.string().url("لینک نامعتبر است").optional().or(z.literal("")),
   telegram: z.string().url("لینک نامعتبر است").optional().or(z.literal("")),
   whatsapp: z.string().optional(),
@@ -41,7 +44,13 @@ export default function AdminSettingsPage() {
   const { data: settings, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isUploadingOgImage, setIsUploadingOgImage] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const ogImageInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -55,14 +64,30 @@ export default function AdminSettingsPage() {
   });
 
   const watchedLogoUrl = useWatch({ control, name: "logoUrl" });
+  const watchedBannerUrl = useWatch({ control, name: "bannerUrl" });
+  const watchedOgImageUrl = useWatch({ control, name: "seoOgImage" });
+  const watchedFaviconUrl = useWatch({ control, name: "seoFavicon" });
 
   const logoPreview = watchedLogoUrl || null;
+  const bannerPreview = watchedBannerUrl || null;
+  const ogImagePreview = watchedOgImageUrl || null;
+  const faviconPreview = watchedFaviconUrl || null;
 
   useEffect(() => {
     if (settings) {
       reset(settings);
     }
   }, [settings, reset]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler, { capture: true });
+    return () => window.removeEventListener("beforeunload", handler, { capture: true });
+  }, [isDirty]);
 
   const onSubmit = (data: SettingsFormData) => {
     const hasChanges = Object.keys(data).some((key) => {
@@ -79,10 +104,20 @@ export default function AdminSettingsPage() {
     });
   };
 
+  const deleteImageIfExists = async (url: string | null | undefined) => {
+    if (!url || !url.startsWith("/uploads/")) return;
+    try {
+      await axiosInstance.delete(`/upload/0?url=${encodeURIComponent(url)}`);
+    } catch {
+      toast.error("خطا در حذف تصویر قبلی");
+    }
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const oldUrl = watchedLogoUrl;
     setIsUploadingLogo(true);
     try {
       const formData = new FormData();
@@ -95,6 +130,8 @@ export default function AdminSettingsPage() {
 
       const result = data.data;
       setValue("logoUrl", result.url, { shouldDirty: true });
+
+      await deleteImageIfExists(oldUrl);
     } catch {
       toast.error("خطا در آپلود لوگو");
     } finally {
@@ -106,18 +143,107 @@ export default function AdminSettingsPage() {
   const handleLogoDelete = async () => {
     const currentUrl = watchedLogoUrl;
     setValue("logoUrl", "", { shouldDirty: true });
+    await deleteImageIfExists(currentUrl);
+  };
 
-    if (currentUrl && currentUrl.startsWith("/uploads/")) {
-      try {
-        const filename = currentUrl.split("/").pop();
-        const imageId = filename?.split("-")[0];
-        if (imageId) {
-          await axiosInstance.delete(`/upload/${imageId}`).catch(() => {});
-        }
-      } catch {
-        // silent
-      }
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const oldUrl = watchedBannerUrl;
+    setIsUploadingBanner(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("alt", "banner");
+
+      const { data } = await axiosInstance.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const result = data.data;
+      setValue("bannerUrl", result.url, { shouldDirty: true });
+
+      await deleteImageIfExists(oldUrl);
+    } catch {
+      toast.error("خطا در آپلود بنر");
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
     }
+  };
+
+  const handleBannerDelete = async () => {
+    const currentUrl = watchedBannerUrl;
+    setValue("bannerUrl", "", { shouldDirty: true });
+    await deleteImageIfExists(currentUrl);
+  };
+
+  const handleOgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const oldUrl = watchedOgImageUrl;
+    setIsUploadingOgImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("alt", "og-image");
+
+      const { data } = await axiosInstance.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const result = data.data;
+      setValue("seoOgImage", result.url, { shouldDirty: true });
+
+      await deleteImageIfExists(oldUrl);
+    } catch {
+      toast.error("خطا در آپلود تصویر OG");
+    } finally {
+      setIsUploadingOgImage(false);
+      if (ogImageInputRef.current) ogImageInputRef.current.value = "";
+    }
+  };
+
+  const handleOgImageDelete = async () => {
+    const currentUrl = watchedOgImageUrl;
+    setValue("seoOgImage", "", { shouldDirty: true });
+    await deleteImageIfExists(currentUrl);
+  };
+
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const oldUrl = watchedFaviconUrl;
+    setIsUploadingFavicon(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("alt", "favicon");
+      formData.append("purpose", "favicon");
+
+      const { data } = await axiosInstance.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const result = data.data;
+      setValue("seoFavicon", result.url, { shouldDirty: true });
+
+      await deleteImageIfExists(oldUrl);
+    } catch {
+      toast.error("خطا در آپلود Favicon");
+    } finally {
+      setIsUploadingFavicon(false);
+      if (faviconInputRef.current) faviconInputRef.current.value = "";
+    }
+  };
+
+  const handleFaviconDelete = async () => {
+    const currentUrl = watchedFaviconUrl;
+    setValue("seoFavicon", "", { shouldDirty: true });
+    await deleteImageIfExists(currentUrl);
   };
 
   if (isLoading) {
@@ -142,9 +268,9 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Tabs defaultValue="general">
           <TabsList className="mb-6">
-            <TabsTrigger value="general">اطلاعات کلی</TabsTrigger>
-            <TabsTrigger value="social">شبکه‌های اجتماعی</TabsTrigger>
-            <TabsTrigger value="seo">SEO</TabsTrigger>
+            <TabsTrigger value="general" className="max-sm:text-[12px]">اطلاعات کلی</TabsTrigger>
+            <TabsTrigger value="social" className="max-sm:text-[12px]">شبکه‌های اجتماعی</TabsTrigger>
+            <TabsTrigger value="seo" className="max-sm:text-[12px]">SEO</TabsTrigger>
           </TabsList>
 
           {/* ─── General Tab ─── */}
@@ -174,14 +300,20 @@ export default function AdminSettingsPage() {
                         <button
                           type="button"
                           onClick={() => logoInputRef.current?.click()}
-                          className="p-1.5 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition shadow-md"
+                          disabled={isUploadingLogo}
+                          className="p-1.5 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
                         >
-                          <Upload className="w-3.5 h-3.5" />
+                          {isUploadingLogo ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
                         </button>
                         <button
                           type="button"
                           onClick={handleLogoDelete}
-                          className="p-1.5 rounded-full bg-red-500 text-white hover:opacity-90 transition shadow-md"
+                          disabled={isUploadingLogo}
+                          className="p-1.5 rounded-full bg-red-500 text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -210,6 +342,81 @@ export default function AdminSettingsPage() {
                     className="hidden"
                   />
                 </div>
+
+                {/* Banner Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
+                    تصویر بنر
+                  </label>
+                  {bannerPreview ? (
+                    <div className="relative inline-block">
+                      <Image
+                        src={bannerPreview}
+                        alt="بنر سالن"
+                        width={400}
+                        height={200}
+                        className="w-full max-w-md h-48 object-cover rounded-2xl border border-[var(--color-ink)]/10 bg-[var(--color-bg-soft)]"
+                      />
+                      <div className="absolute -top-2 -left-2 flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => bannerInputRef.current?.click()}
+                          disabled={isUploadingBanner}
+                          className="p-1.5 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
+                        >
+                          {isUploadingBanner ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBannerDelete}
+                          disabled={isUploadingBanner}
+                          className="p-1.5 rounded-full bg-red-500 text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="relative flex flex-col items-center justify-center w-full max-w-md h-48 rounded-2xl border-2 border-dashed border-[var(--color-ink)]/15 hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-bg-soft)] cursor-pointer transition-all"
+                    >
+                      {isUploadingBanner ? (
+                        <Loader2 className="w-6 h-6 text-[var(--color-primary)] animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-[var(--color-primary)]/60 mb-1" />
+                          <span className="text-xs text-[var(--color-ink-muted)]">آپلود بنر</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleBannerUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Banner Text */}
+                <Textarea
+                  label="متن بنر"
+                  placeholder="متنی که روی بنر نمایش داده می‌شود"
+                  error={errors.bannerText?.message}
+                  {...register("bannerText")}
+                />
+                <Textarea
+                  label="متن ثانویه بنر"
+                  placeholder="متن ثانویه زیر متن اصلی بنر"
+                  error={errors.bannerTextSecondary?.message}
+                  {...register("bannerTextSecondary")}
+                />
 
                 <Input
                   label="نام سالن"
@@ -320,20 +527,128 @@ export default function AdminSettingsPage() {
                   error={errors.seoKeywords?.message}
                   {...register("seoKeywords")}
                 />
-                <Input
-                  label="تصویر Open Graph (OG Image)"
-                  placeholder="URL تصویر OG"
-                  dir="ltr"
-                  error={errors.seoOgImage?.message}
-                  {...register("seoOgImage")}
-                />
-                <Input
-                  label="آدرس Favicon"
-                  placeholder="URL favicon"
-                  dir="ltr"
-                  error={errors.seoFavicon?.message}
-                  {...register("seoFavicon")}
-                />
+
+                {/* OG Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
+                    تصویر Open Graph (OG Image)
+                  </label>
+                  {ogImagePreview ? (
+                    <div className="relative inline-block">
+                      <Image
+                        src={ogImagePreview}
+                        alt="تصویر OG"
+                        width={400}
+                        height={210}
+                        className="w-full max-w-md h-40 object-cover rounded-2xl border border-[var(--color-ink)]/10 bg-[var(--color-bg-soft)]"
+                      />
+                      <div className="absolute -top-2 -left-2 flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => ogImageInputRef.current?.click()}
+                          disabled={isUploadingOgImage}
+                          className="p-1.5 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
+                        >
+                          {isUploadingOgImage ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleOgImageDelete}
+                          disabled={isUploadingOgImage}
+                          className="p-1.5 rounded-full bg-red-500 text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => ogImageInputRef.current?.click()}
+                      className="relative flex flex-col items-center justify-center w-full max-w-md h-40 rounded-2xl border-2 border-dashed border-[var(--color-ink)]/15 hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-bg-soft)] cursor-pointer transition-all"
+                    >
+                      {isUploadingOgImage ? (
+                        <Loader2 className="w-6 h-6 text-[var(--color-primary)] animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-[var(--color-primary)]/60 mb-1" />
+                          <span className="text-xs text-[var(--color-ink-muted)]">آپلود تصویر OG</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={ogImageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleOgImageUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Favicon Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
+                    Favicon
+                  </label>
+                  {faviconPreview ? (
+                    <div className="relative inline-block">
+                      <Image
+                        src={faviconPreview}
+                        alt="Favicon"
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 object-contain rounded-xl border border-[var(--color-ink)]/10 bg-[var(--color-bg-soft)]"
+                      />
+                      <div className="absolute -top-2 -left-2 flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => faviconInputRef.current?.click()}
+                          disabled={isUploadingFavicon}
+                          className="p-1.5 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
+                        >
+                          {isUploadingFavicon ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleFaviconDelete}
+                          disabled={isUploadingFavicon}
+                          className="p-1.5 rounded-full bg-red-500 text-white hover:opacity-90 transition shadow-md disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => faviconInputRef.current?.click()}
+                      className="relative flex flex-col items-center justify-center w-24 h-24 rounded-2xl border-2 border-dashed border-[var(--color-ink)]/15 hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-bg-soft)] cursor-pointer transition-all"
+                    >
+                      {isUploadingFavicon ? (
+                        <Loader2 className="w-6 h-6 text-[var(--color-primary)] animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-[var(--color-primary)]/60 mb-1" />
+                          <span className="text-xs text-[var(--color-ink-muted)]">آپلود Favicon</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={faviconInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/x-icon"
+                    onChange={handleFaviconUpload}
+                    className="hidden"
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

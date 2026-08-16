@@ -141,11 +141,58 @@ export class UploadService {
     }
   }
 
+  async processFavicon(
+    file: Buffer,
+    mimeType: string,
+    alt?: string
+  ): Promise<ApiResponse<UploadResult>> {
+    try {
+      await this.ensureUploadDir();
+
+      const timestamp = Date.now();
+      const uuid = randomUUID();
+      const ext = mimeType === "image/png" ? "png" : mimeType === "image/gif" ? "gif" : "ico";
+      const filename = `${uuid}-${timestamp}.${ext}`;
+
+      await fs.writeFile(path.join(UPLOAD_DIR, filename), file);
+
+      const image = await imageRepository.create({
+        url: `/uploads/${filename}`,
+        type: "image",
+        alt: alt || null,
+        width: null,
+        height: null,
+      });
+
+      return {
+        success: true,
+        data: {
+          id: image.id,
+          url: image.url,
+          type: "image",
+          alt: image.alt,
+          width: null,
+          height: null,
+        },
+        message: "Favicon uploaded successfully",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Favicon upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      };
+    }
+  }
+
   async uploadFile(
     file: File,
-    options?: { alt?: string }
+    options?: { alt?: string; purpose?: string }
   ): Promise<ApiResponse<UploadResult>> {
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (options?.purpose === "favicon" && this.isImage(file.type)) {
+      return this.processFavicon(buffer, file.type, options?.alt);
+    }
 
     if (this.isImage(file.type)) {
       return this.processImage(buffer, { alt: options?.alt });
@@ -188,6 +235,42 @@ export class UploadService {
       }
 
       await imageRepository.delete(id);
+      return { success: true, message: "File deleted successfully" };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Delete failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      };
+    }
+  }
+
+  async deleteImageByUrl(url: string): Promise<ApiResponse<null>> {
+    try {
+      const image = await imageRepository.findByUrl(url);
+
+      // Delete file from disk regardless of DB record
+      const filePath = path.join(process.cwd(), "public", url);
+      try {
+        await fs.unlink(filePath);
+      } catch {
+        // File might not exist
+      }
+
+      // Delete thumbnail if it exists
+      const dir = path.dirname(url);
+      const filename = path.basename(url);
+      const thumbPath = path.join(process.cwd(), "public", dir, `thumb-${filename}`);
+      try {
+        await fs.unlink(thumbPath);
+      } catch {
+        // Thumbnail might not exist
+      }
+
+      // Delete DB record if it exists
+      if (image) {
+        await imageRepository.delete(image.id);
+      }
+
       return { success: true, message: "File deleted successfully" };
     } catch (error) {
       return {

@@ -5,15 +5,19 @@ import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { GalleryHero } from "@/components/gallery/GalleryHero";
 import { BreadcrumbSchema } from "@/components/shared/JsonLd";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = generateSEOMetadata({
-  title: "گالری نمونه کارها",
-  description:
-    "گالری تصاویر نمونه کارهای تخصصی سالن زیبایی شامل میکاپ، اصلاح مو، رنگ مو، کاشت ناخن و خدمات پوستی با بهترین کیفیت",
-  path: "/gallery",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  return generateSEOMetadata({
+    title: "گالری نمونه کارها",
+    description: "گالری تصاویر نمونه کارهای تخصصی سالن زیبایی شامل میکاپ، اصلاح مو، رنگ مو، کاشت ناخن و خدمات پوستی با بهترین کیفیت",
+    path: "/gallery",
+    site: { siteName: settings.salonName, siteDescription: settings.seoDescription, seoOgImage: settings.seoOgImage },
+  });
+}
 
 export default async function GalleryPage() {
   let items: {
@@ -33,12 +37,13 @@ export default async function GalleryPage() {
     // Database not connected - render with empty data
   }
 
+  const settings = await getSiteSettings();
+
   const gallerySchema = {
     "@context": "https://schema.org",
     "@type": "ImageGallery",
-    name: "گالری نمونه کارهای سالن زیبایی",
-    description:
-      "گالری تصاویر نمونه کارهای تخصصی سالن زیبایی شامل میکاپ، اصلاح مو، رنگ مو و خدمات پوستی",
+    name: `گالری نمونه کارهای ${settings.salonName}`,
+    description: "گالری تصاویر نمونه کارهای تخصصی سالن زیبایی شامل میکاپ، اصلاح مو، رنگ مو و خدمات پوستی",
     url: "https://beautysalon.com/gallery",
     image: items
       .filter((item) => item.image)
@@ -66,7 +71,7 @@ export default async function GalleryPage() {
 
       <GalleryHero />
 
-      <section className="py-16 bg-[var(--color-bg-soft)] relative overflow-hidden">
+      <section className="py-2 sm:py-16 bg-[var(--color-bg-soft)] relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-[var(--color-primary)]/[0.04] blur-3xl" />
 
         <Container className="relative">

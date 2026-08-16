@@ -9,6 +9,7 @@ import {
   Trash2,
   MessageCircle,
   Reply,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -189,12 +190,15 @@ export default function AdminCommentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-[var(--color-ink)]">مدیریت نظرات</h1>
+        <div className="text-sm text-[var(--color-ink-muted)]">
+          کل: {commentsData?.total || 0} نظر
+        </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {[
           { key: "all" as const, label: "همه" },
           { key: "pending" as const, label: "در انتظار تایید" },
@@ -250,23 +254,30 @@ export default function AdminCommentsPage() {
       <Modal
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title="تایید حذف"
-        className="max-w-sm"
       >
-        <p className="text-[var(--color-ink-muted)] mb-6">
-          آیا از حذف این نظر اطمینان دارید؟
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => setDeleteId(null)}>
-            انصراف
-          </Button>
-          <Button
-            variant="danger"
-            onClick={confirmDelete}
-            isLoading={deleteComment.isPending}
-          >
-            حذف
-          </Button>
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--color-ink)] mb-2">
+            حذف نظر
+          </h3>
+          <p className="text-sm text-[var(--color-ink-muted)] mb-6 leading-relaxed">
+            آیا از حذف این نظر اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>
+              انصراف
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={confirmDelete}
+              isLoading={deleteComment.isPending}
+            >
+              <Trash2 className="w-4 h-4 ml-1.5" />
+              حذف
+            </Button>
+          </div>
         </div>
       </Modal>
 
@@ -306,7 +317,7 @@ export default function AdminCommentsPage() {
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <p className="text-sm font-semibold text-[var(--color-ink)]">
                     {reply.name}
                   </p>

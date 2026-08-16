@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://beautysalon.com";
-const SITE_NAME = "Beauty Salon";
-const DEFAULT_DESCRIPTION = "بهترین سالن زیبایی با خدمات تخصصی پوست، مو، ناخن و میکاپ";
+const FALLBACK_SITE_NAME = "Beauty Salon";
+const FALLBACK_DESCRIPTION = "بهترین سالن زیبایی با خدمات تخصصی پوست، مو، ناخن و میکاپ";
+
+interface SiteMeta {
+  siteName?: string;
+  siteDescription?: string;
+  logoUrl?: string;
+  seoOgImage?: string;
+}
 
 interface GenerateMetadataParams {
   title: string;
@@ -12,31 +19,37 @@ interface GenerateMetadataParams {
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
+  site?: SiteMeta;
 }
 
 export function generateMetadata({
   title,
-  description = DEFAULT_DESCRIPTION,
+  description,
   path = "",
   image,
   type = "website",
   publishedTime,
   modifiedTime,
+  site = {},
 }: GenerateMetadataParams): Metadata {
+  const siteName = site.siteName || FALLBACK_SITE_NAME;
+  const defaultDesc = site.siteDescription || FALLBACK_DESCRIPTION;
+  const desc = description || defaultDesc;
   const url = `${SITE_URL}${path}`;
-  const ogImage = image || `${SITE_URL}/og-default.jpg`;
+  const ogImage = image || site.seoOgImage || `${SITE_URL}/og-default.jpg`;
 
   return {
-    title: `${title} | ${SITE_NAME}`,
-    description,
+    title: `${title} | ${siteName}`,
+    description: desc,
+    keywords: undefined,
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: `${title} | ${SITE_NAME}`,
-      description,
+      title: `${title} | ${siteName}`,
+      description: desc,
       url,
-      siteName: SITE_NAME,
+      siteName,
       images: [
         {
           url: ogImage,
@@ -52,8 +65,8 @@ export function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} | ${SITE_NAME}`,
-      description,
+      title: `${title} | ${siteName}`,
+      description: desc,
       images: [ogImage],
     },
     robots: {
@@ -76,25 +89,32 @@ interface OrganizationSchemaProps {
   logo?: string;
   phone?: string;
   address?: string;
+  site?: SiteMeta;
 }
 
 export function generateOrganizationSchema({
-  name = SITE_NAME,
+  name,
   url = SITE_URL,
-  logo = `${SITE_URL}/logo.png`,
-  phone = "+98-21-12345678",
-  address = "تهران، خیابان ولیعصر، پلاک ۱۲۳",
+  logo,
+  phone,
+  address,
+  site = {},
 }: OrganizationSchemaProps = {}) {
+  const siteName = name || site.siteName || FALLBACK_SITE_NAME;
+  const siteLogo = logo || site.logoUrl || `${SITE_URL}/logo.png`;
+  const sitePhone = phone || "+98-21-12345678";
+  const siteAddress = address || "تهران، خیابان ولیعصر، پلاک ۱۲۳";
+
   return {
     "@context": "https://schema.org",
     "@type": "BeautySalon",
-    name,
+    name: siteName,
     url,
-    logo,
-    telephone: phone,
+    logo: siteLogo,
+    telephone: sitePhone,
     address: {
       "@type": "PostalAddress",
-      streetAddress: address,
+      streetAddress: siteAddress,
       addressCountry: "IR",
     },
     openingHoursSpecification: {
@@ -117,6 +137,7 @@ interface ServiceSchemaProps {
   currency?: string;
   duration?: string;
   category?: string;
+  site?: SiteMeta;
 }
 
 export function generateServiceSchema({
@@ -126,7 +147,10 @@ export function generateServiceSchema({
   currency = "IRR",
   duration,
   category,
+  site = {},
 }: ServiceSchemaProps) {
+  const siteName = site.siteName || FALLBACK_SITE_NAME;
+
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -134,7 +158,7 @@ export function generateServiceSchema({
     description,
     provider: {
       "@type": "BeautySalon",
-      name: SITE_NAME,
+      name: siteName,
       url: SITE_URL,
     },
     offers: {
@@ -156,6 +180,7 @@ interface ArticleSchemaProps {
   dateModified?: string;
   author?: string;
   url: string;
+  site?: SiteMeta;
 }
 
 export function generateArticleSchema({
@@ -164,9 +189,12 @@ export function generateArticleSchema({
   image,
   datePublished,
   dateModified,
-  author = SITE_NAME,
+  author,
   url,
+  site = {},
 }: ArticleSchemaProps) {
+  const siteName = site.siteName || FALLBACK_SITE_NAME;
+
   return {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -177,14 +205,14 @@ export function generateArticleSchema({
     dateModified: dateModified || datePublished,
     author: {
       "@type": "Organization",
-      name: author,
+      name: author || siteName,
     },
     publisher: {
       "@type": "Organization",
-      name: SITE_NAME,
+      name: siteName,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/logo.png`,
+        url: site.logoUrl || `${SITE_URL}/logo.png`,
       },
     },
     mainEntityOfPage: {

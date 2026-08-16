@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -64,11 +64,7 @@ export function BlogForm({ mode, initialData, postId }: BlogFormProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
-  useEffect(() => {
-    if (!slugManuallyEdited && title) {
-      setSlug(slugify(title));
-    }
-  }, [title, slugManuallyEdited]);
+  const displaySlug = slugManuallyEdited ? slug : (title ? slugify(title) : slug);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -143,7 +139,7 @@ export function BlogForm({ mode, initialData, postId }: BlogFormProps) {
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--color-ink)]">
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] max-sm:text-[10px]">
             {mode === "create" ? "پست جدید" : "ویرایش پست"}
           </h1>
         </div>
@@ -169,7 +165,7 @@ export function BlogForm({ mode, initialData, postId }: BlogFormProps) {
               />
               <Input
                 label="slug"
-                value={slug}
+                value={displaySlug}
                 onChange={(e) => {
                   setSlug(e.target.value);
                   setSlugManuallyEdited(true);
@@ -189,11 +185,12 @@ export function BlogForm({ mode, initialData, postId }: BlogFormProps) {
           </Card>
 
           <Card>
-            <CardContent>
+            <CardContent className="max-sm:p-0">
               <label className="block text-sm font-medium text-[var(--color-ink)] mb-2">
                 محتوا
               </label>
               <RichTextEditor
+                
                 value={content}
                 onChange={setContent}
                 placeholder="محتوای پست را بنویسید..."
@@ -289,6 +286,7 @@ export function BlogForm({ mode, initialData, postId }: BlogFormProps) {
 
                 {coverImage ? (
                   <div className="relative aspect-video">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={coverImage}
                       alt="پیش‌نمایش کاور"

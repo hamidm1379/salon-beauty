@@ -1,27 +1,37 @@
 import Script from "next/script";
 
+interface SiteMeta {
+  siteName?: string;
+  logoUrl?: string;
+}
+
 interface OrganizationSchemaProps {
   name?: string;
   url?: string;
   logo?: string;
   phone?: string;
   address?: string;
+  site?: SiteMeta;
 }
 
 export function OrganizationSchema({
-  name = "Beauty Salon",
+  name,
   url = "https://beautysalon.com",
-  logo = "https://beautysalon.com/logo.png",
+  logo,
   phone = "+98-21-12345678",
   address = "تهران، خیابان ولیعصر، پلاک ۱۲۳",
+  site = {},
 }: OrganizationSchemaProps = {}) {
+  const siteName = name || site.siteName || "Beauty Salon";
+  const siteLogo = logo || site.logoUrl || "https://beautysalon.com/logo.png";
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "BeautySalon",
     "@id": url + "#organization",
-    name,
+    name: siteName,
     url,
-    logo,
+    logo: siteLogo,
     telephone: phone,
     address: {
       "@type": "PostalAddress",
@@ -57,6 +67,7 @@ interface ServiceSchemaProps {
   currency?: string;
   duration?: string;
   category?: string;
+  site?: SiteMeta;
 }
 
 export function ServiceSchema({
@@ -66,7 +77,10 @@ export function ServiceSchema({
   currency = "IRR",
   duration,
   category,
+  site = {},
 }: ServiceSchemaProps) {
+  const siteName = site.siteName || "Beauty Salon";
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -74,7 +88,7 @@ export function ServiceSchema({
     description,
     provider: {
       "@type": "BeautySalon",
-      name: "Beauty Salon",
+      name: siteName,
       url: "https://beautysalon.com",
     },
     offers: {
@@ -170,6 +184,7 @@ interface ArticleSchemaProps {
   dateModified?: string;
   author?: string;
   url: string;
+  site?: SiteMeta;
 }
 
 export function ArticleSchema({
@@ -178,9 +193,13 @@ export function ArticleSchema({
   image,
   datePublished,
   dateModified,
-  author = "Beauty Salon",
+  author,
   url,
+  site = {},
 }: ArticleSchemaProps) {
+  const siteName = site.siteName || "Beauty Salon";
+  const siteLogo = site.logoUrl || "https://beautysalon.com/logo.png";
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -192,14 +211,14 @@ export function ArticleSchema({
     dateModified: dateModified || datePublished,
     author: {
       "@type": "Organization",
-      name: author,
+      name: author || siteName,
     },
     publisher: {
       "@type": "Organization",
-      name: "Beauty Salon",
+      name: siteName,
       logo: {
         "@type": "ImageObject",
-        url: "https://beautysalon.com/logo.png",
+        url: siteLogo,
       },
     },
     mainEntityOfPage: {

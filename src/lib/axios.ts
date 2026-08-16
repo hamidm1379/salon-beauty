@@ -29,9 +29,7 @@ axiosInstance.interceptors.response.use(
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         const path = window.location.pathname;
-        if (!path.startsWith("/admin") && !path.startsWith("/login")) {
-          window.location.href = "/login";
-        } else if (path.startsWith("/admin") && path !== "/admin/login") {
+        if (path.startsWith("/admin") && path !== "/admin/login") {
           window.location.href = "/admin/login";
         }
       }

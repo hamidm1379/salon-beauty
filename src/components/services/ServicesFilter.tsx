@@ -250,3 +250,4 @@ export function ServicesFilter({ categories, categorySlug }: ServicesFilterProps
     </div>
   );
 }
+

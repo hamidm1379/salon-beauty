@@ -3,14 +3,19 @@ import { Container, Heading } from "@/components/ui/Layout";
 import { BookingForm } from "@/components/appointment/BookingForm";
 import { BreadcrumbSchema } from "@/components/shared/JsonLd";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
+import { getSiteSettings } from "@/lib/site-settings";
 
-export const metadata: Metadata = generateSEOMetadata({
-  title: "رزرو نوبت",
-  description: "نوبت خود را به صورت آنلاین رزرو کنید - سالن زیبایی",
-  path: "/appointment",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  return generateSEOMetadata({
+    title: "رزرو نوبت",
+    description: "نوبت خود را به صورت آنلاین رزرو کنید - " + settings.salonName,
+    path: "/appointment",
+    site: { siteName: settings.salonName, siteDescription: settings.seoDescription, seoOgImage: settings.seoOgImage },
+  });
+}
 
-export default function AppointmentPage() {
+export default async function AppointmentPage() {
   return (
     <>
       <BreadcrumbSchema

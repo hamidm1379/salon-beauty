@@ -13,6 +13,7 @@ import {
   X,
   Upload,
   Image as ImageIcon,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -60,6 +61,13 @@ export default function AdminServicesPage() {
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: "danger" | "warning";
+  }>({ open: false, title: "", message: "", onConfirm: () => {} });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: servicesData, isLoading } = useAdminServices({
@@ -80,9 +88,16 @@ export default function AdminServicesPage() {
   const categories = categoriesData?.items || [];
 
   const handleDeleteService = (id: string) => {
-    if (confirm("آیا از حذف این سرویس اطمینان دارید؟")) {
-      deleteService.mutate(id);
-    }
+    setConfirmModal({
+      open: true,
+      title: "حذف سرویس",
+      message: "آیا از حذف این سرویس اطمینان دارید؟ این عمل قابل بازگشت نیست.",
+      variant: "danger",
+      onConfirm: () => {
+        deleteService.mutate(id);
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+      },
+    });
   };
 
   const handleDeleteCategory = (id: string, name: string, serviceCount: number) => {
@@ -90,9 +105,16 @@ export default function AdminServicesPage() {
       toast.error(`دسته‌بندی "${name}" دارای ${serviceCount} سرویس است و قابل حذف نیست`);
       return;
     }
-    if (confirm(`آیا از حذف دسته‌بندی "${name}" اطمینان دارید؟`)) {
-      deleteCategory.mutate(id);
-    }
+    setConfirmModal({
+      open: true,
+      title: "حذف دسته‌بندی",
+      message: `آیا از حذف دسته‌بندی "${name}" اطمینان دارید؟ این عمل قابل بازگشت نیست.`,
+      variant: "danger",
+      onConfirm: () => {
+        deleteCategory.mutate(id);
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+      },
+    });
   };
 
   const openCategoryModal = (category?: (typeof categories)[0]) => {
@@ -202,17 +224,10 @@ export default function AdminServicesPage() {
               width={48}
               height={48}
               sizes="48px"
-              className="w-10 h-10 rounded-lg object-cover"
+              className="w-10 h-10 rounded-lg object-cover hidden md:block"
             />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center">
-              <span className="text-xs text-[var(--color-ink-muted)]">بدون عکس</span>
-            </div>
-          )}
-          <div>
-            <p className="font-medium text-[var(--color-ink)]">{service.name}</p>
-            <p className="text-xs text-[var(--color-ink-muted)]">/{service.slug}</p>
-          </div>
+          ) : null}
+          <p className="font-medium text-[var(--color-ink)]">{service.name}</p>
         </div>
       ),
     },
@@ -273,12 +288,12 @@ export default function AdminServicesPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-[var(--color-ink)]">مدیریت سرویس‌ها</h1>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" className="gap-2" onClick={() => openCategoryModal()}>
+          <Button variant="secondary" className="max-sm:text-[10px] gap-2" onClick={() => openCategoryModal()}>
             <FolderPlus className="w-4 h-4" />
             دسته‌بندی جدید
           </Button>
           <Link href="/admin/services/new">
-            <Button className="gap-2">
+            <Button className="max-sm:text-[10px] gap-2">
               <Plus className="w-4 h-4" />
               سرویس جدید
             </Button>
@@ -384,6 +399,7 @@ export default function AdminServicesPage() {
               data={services}
               keyExtractor={(service) => service.id}
               emptyMessage="سرویسی یافت نشد"
+              getMobileImage={(service) => service.image}
             />
           )}
         </CardContent>
@@ -594,6 +610,40 @@ export default function AdminServicesPage() {
               isLoading={createCategory.isPending || updateCategory.isPending}
             >
               {editingCategory ? "بروزرسانی" : "ایجاد"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Confirm Delete Modal */}
+      <Modal
+        open={confirmModal.open}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, open: false }))}
+      >
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--color-ink)] mb-2">
+            {confirmModal.title}
+          </h3>
+          <p className="text-sm text-[var(--color-ink-muted)] mb-6 leading-relaxed">
+            {confirmModal.message}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmModal((prev) => ({ ...prev, open: false }))}
+            >
+              انصراف
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={confirmModal.onConfirm}
+              isLoading={deleteService.isPending || deleteCategory.isPending}
+            >
+              <Trash2 className="w-4 h-4 ml-1.5" />
+              حذف
             </Button>
           </div>
         </div>

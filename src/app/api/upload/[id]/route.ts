@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { uploadService } from "@/services/upload.service";
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const result = await uploadService.deleteImage(id);
+    const url = new URL(request.url).searchParams.get("url");
+
+    const result = url
+      ? await uploadService.deleteImageByUrl(url)
+      : await uploadService.deleteImage(id);
 
     if (!result.success) {
       return NextResponse.json(

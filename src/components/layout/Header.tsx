@@ -2,10 +2,12 @@
 
 import { Search, Sparkles, Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/utils/cn";
 import { SearchModal } from "@/components/search/SearchModal";
+import { useSettings } from "@/hooks/use-settings";
 
 const links = [
   { label: "صفحه اصلی", href: "/" },
@@ -20,17 +22,32 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { data: settings } = useSettings();
+
+  const logoUrl = settings?.logoUrl || "";
+  const salonName = settings?.salonName || "Salon";
 
   return (
     <>
     <header className="fixed top-0 inset-x-0 z-50 bg-[var(--color-bg)]/80 backdrop-blur-md border-b border-[var(--color-ink)]/5">
       <nav
-        className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4"
+        className="max-w-7xl mx-auto flex items-center justify-between px-6"
         aria-label="منوی اصلی"
       >
         <Link href="/" className="flex items-center gap-2 order-last lg:order-first">
-          <Sparkles className="w-6 h-6 text-[var(--color-primary)]" aria-hidden="true" />
-          <span className="text-xl font-bold text-[var(--color-ink)]">Salon</span>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={salonName}
+              width={70}
+              height={70}
+              className="rounded-full object-contain"
+              priority
+            />
+          ) : (
+            <Sparkles className="w-6 h-6 text-[var(--color-primary)]" aria-hidden="true" />
+          )}
+          {/* <span className="text-xl font-bold text-[var(--color-ink)]">{salonName}</span> */}
         </Link>
 
         <ul className="hidden lg:flex items-center gap-8 text-sm font-medium">

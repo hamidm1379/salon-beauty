@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const alt = formData.get("alt") as string | null;
+    const purpose = formData.get("purpose") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await uploadService.uploadFile(file, { alt: alt ?? undefined });
+    const result = await uploadService.uploadFile(file, { alt: alt ?? undefined, purpose: purpose ?? undefined });
 
     if (!result.success) {
       console.error("Upload service error:", result.message);

@@ -5,33 +5,28 @@ interface InstagramIconProps {
 export function InstagramIcon({ className }: InstagramIconProps) {
   return (
     <svg
-      viewBox="0 0 64 64"
-      fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
       className={className}
     >
       <rect
-        x="7"
-        y="7"
-        width="52"
-        height="52"
-        rx="15"
+        x="1"
+        y="1"
+        width="22"
+        height="22"
+        rx="6"
         stroke="currentColor"
-        strokeWidth="3"
+        strokeWidth="1.8"
       />
       <circle
-        cx="32"
-        cy="32"
-        r="13"
+        cx="12"
+        cy="12"
+        r="5"
         stroke="currentColor"
-        strokeWidth="3"
+        strokeWidth="1.8"
       />
-      <circle
-        cx="45.5"
-        cy="18.5"
-        r="3.2"
-        fill="currentColor"
-      />
+      <circle cx="17.2" cy="6.9" r="1.2" fill="currentColor" />
     </svg>
   );
 }

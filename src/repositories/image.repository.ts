@@ -10,6 +10,10 @@ export class ImageRepository {
     return prisma.image.findUnique({ where: { id } });
   }
 
+  async findByUrl(url: string) {
+    return prisma.image.findFirst({ where: { url } });
+  }
+
   async delete(id: string) {
     return prisma.image.delete({ where: { id } });
   }

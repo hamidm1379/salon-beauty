@@ -10,6 +10,7 @@ import {
   Loader2,
   Image as ImageIcon,
   Film,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -53,7 +54,7 @@ export default function AdminGalleryPage() {
       render: (item: (typeof items)[0]) => {
         const mediaType = item.image?.type || "image";
         return (
-          <div className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center overflow-hidden">
+          <div className="w-12 h-12 rounded-lg bg-[var(--color-bg-soft)] flex items-center justify-center overflow-hidden hidden md:flex">
             {item.image ? (
               mediaType === "video" ? (
                 <div className="relative w-full h-full">
@@ -87,14 +88,7 @@ export default function AdminGalleryPage() {
       key: "title",
       label: "عنوان",
       render: (item: (typeof items)[0]) => (
-        <div>
-          <p className="font-medium text-[var(--color-ink)]">{item.title}</p>
-          {item.description && (
-            <p className="text-xs text-[var(--color-ink-muted)] line-clamp-1">
-              {item.description}
-            </p>
-          )}
-        </div>
+        <p className="font-medium text-[var(--color-ink)]">{item.title}</p>
       ),
     },
     {
@@ -170,6 +164,7 @@ export default function AdminGalleryPage() {
               data={items}
               keyExtractor={(item) => item.id}
               emptyMessage="آیتمی یافت نشد"
+              getMobileImage={(item) => item.image?.url}
             />
           )}
         </CardContent>
@@ -188,23 +183,30 @@ export default function AdminGalleryPage() {
       <Modal
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title="تایید حذف"
-        className="max-w-sm"
       >
-        <p className="text-[var(--color-ink-muted)] mb-6">
-          آیا از حذف این آیتم اطمینان دارید؟ این عمل غیرقابل بازگشت است.
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => setDeleteId(null)}>
-            انصراف
-          </Button>
-          <Button
-            variant="danger"
-            onClick={confirmDelete}
-            isLoading={deleteItem.isPending}
-          >
-            حذف
-          </Button>
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--color-ink)] mb-2">
+            حذف آیتم گالری
+          </h3>
+          <p className="text-sm text-[var(--color-ink-muted)] mb-6 leading-relaxed">
+            آیا از حذف این آیتم اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>
+              انصراف
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={confirmDelete}
+              isLoading={deleteItem.isPending}
+            >
+              <Trash2 className="w-4 h-4 ml-1.5" />
+              حذف
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

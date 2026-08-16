@@ -39,7 +39,7 @@ type LoginInput = z.infer<typeof loginSchema>;
 export default function AdminLoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [captcha, setCaptcha] = useState<ReturnType<typeof generateCaptcha>>(() => generateCaptcha());
+  const [captcha, setCaptcha] = useState<ReturnType<typeof generateCaptcha>>(generateCaptcha);
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaError, setCaptchaError] = useState("");
 
@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data: LoginInput) => {
     const answer = parseInt(captchaInput, 10);
-    if (isNaN(answer) || answer !== captcha.answer) {
+    if (isNaN(answer) || !captcha || answer !== captcha.answer) {
       setCaptchaError("پاسخ سوال صحیح نیست");
       return;
     }

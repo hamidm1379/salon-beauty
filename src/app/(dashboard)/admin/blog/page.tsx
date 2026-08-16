@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -16,13 +16,16 @@ import {
   Tag,
   FolderPlus,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
+import { ResponsiveTable } from "@/components/admin/ResponsiveTable";
 import {
   useBlogPosts,
   useDeleteBlogPost,
@@ -40,6 +43,10 @@ export default function AdminBlogPage() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryDesc, setNewCategoryDesc] = useState("");
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    postId: string | null;
+  }>({ open: false, postId: null });
 
   const { data: postsData, isLoading } = useBlogPosts({
     blogCategoryId: selectedCategory || undefined,
@@ -62,9 +69,13 @@ export default function AdminBlogPage() {
   const draftCount = posts.filter((p) => !p.published).length;
 
   const handleDelete = (id: string) => {
-    if (confirm("آیا از حذف این پست اطمینان دارید؟")) {
-      deletePost.mutate(id);
-    }
+    setConfirmModal({ open: true, postId: id });
+  };
+
+  const confirmDelete = () => {
+    if (!confirmModal.postId) return;
+    deletePost.mutate(confirmModal.postId);
+    setConfirmModal({ open: false, postId: null });
   };
 
   const handleTogglePublish = (id: string, currentStatus: boolean) => {
@@ -88,6 +99,86 @@ export default function AdminBlogPage() {
     );
   };
 
+  const columns = [
+    {
+      key: "title",
+      label: "مقاله",
+      render: (post: (typeof posts)[0]) => (
+        <div className="min-w-0">
+          <Link
+            href={`/admin/blog/edit/${post.id}`}
+            className="font-semibold text-sm text-[var(--color-ink)] hover:text-[var(--color-primary)] transition-colors line-clamp-1"
+          >
+            {post.title}
+          </Link>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      label: "دسته‌بندی",
+      render: (post: (typeof posts)[0]) => (
+        <Badge variant="default" className="text-xs">
+          {post.blogCategory.name}
+        </Badge>
+      ),
+    },
+    {
+      key: "date",
+      label: "تاریخ",
+      render: (post: (typeof posts)[0]) => (
+        <span className="text-sm text-[var(--color-ink-muted)] flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5" />
+          {new Date(post.createdAt).toLocaleDateString("fa-IR")}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      label: "وضعیت",
+      render: (post: (typeof posts)[0]) => (
+        <button
+          onClick={() => handleTogglePublish(post.id, post.published)}
+          className="inline-flex"
+        >
+          <Badge
+            variant={post.published ? "success" : "warning"}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            {post.published ? "منتشر شده" : "پیش‌نویس"}
+          </Badge>
+        </button>
+      ),
+    },
+    {
+      key: "actions",
+      label: "عملیات",
+      render: (post: (typeof posts)[0]) => (
+        <div className="flex items-center gap-1">
+          <Link href={`/blog/${post.slug}`} target="_blank">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="مشاهده">
+              <Eye className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Link href={`/admin/blog/edit/${post.id}`}>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="ویرایش">
+              <Edit className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+            title="حذف"
+            onClick={() => handleDelete(post.id)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -101,14 +192,14 @@ export default function AdminBlogPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
-            className="gap-2"
+            className="gap-2 max-sm:text-[10px]"
             onClick={() => setShowCategoryModal(true)}
           >
             <FolderPlus className="w-4 h-4" />
             دسته‌بندی جدید
           </Button>
           <Link href="/admin/blog/new">
-            <Button className="gap-2">
+            <Button className="gap-2 max-sm:text-[10px]">
               <Plus className="w-4 h-4" />
               پست جدید
             </Button>
@@ -209,142 +300,15 @@ export default function AdminBlogPage() {
         </Card>
       ) : (
         <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[var(--color-ink)]/10">
-                  <th className="text-right text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5">
-                    مقاله
-                  </th>
-                  <th className="text-right text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5 hidden md:table-cell">
-                    دسته‌بندی
-                  </th>
-                  <th className="text-right text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5 hidden lg:table-cell">
-                    تاریخ
-                  </th>
-                  <th className="text-center text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5">
-                    وضعیت
-                  </th>
-                  <th className="text-center text-xs font-semibold text-[var(--color-ink-muted)] uppercase tracking-wider px-5 py-3.5">
-                    عملیات
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-ink)]/5">
-                <AnimatePresence>
-                  {posts.map((post, index) => (
-                    <motion.tr
-                      key={post.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="group hover:bg-[var(--color-bg-soft)]/50 transition-colors"
-                    >
-                      {/* Title + thumbnail */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-12 rounded-lg overflow-hidden bg-[var(--color-bg-soft)] shrink-0 border border-[var(--color-ink)]/5">
-                            {post.coverImage || post.image?.url ? (
-                              <Image
-                                src={post.image?.url || post.coverImage || ""}
-                                alt={post.title}
-                                width={128}
-                                height={96}
-                                sizes="128px"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <FileText className="w-5 h-5 text-[var(--color-ink-muted)]/40" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <Link
-                              href={`/admin/blog/edit/${post.id}`}
-                              className="font-semibold text-sm text-[var(--color-ink)] hover:text-[var(--color-primary)] transition-colors line-clamp-1"
-                            >
-                              {post.title}
-                            </Link>
-                            {post.excerpt && (
-                              <p className="text-xs text-[var(--color-ink-muted)] line-clamp-1 mt-0.5">
-                                {post.excerpt}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Category */}
-                      <td className="px-5 py-4 hidden md:table-cell">
-                        <Badge variant="default" className="text-xs">
-                          {post.blogCategory.name}
-                        </Badge>
-                      </td>
-
-                      {/* Date */}
-                      <td className="px-5 py-4 hidden lg:table-cell">
-                        <span className="text-sm text-[var(--color-ink-muted)] flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {new Date(post.createdAt).toLocaleDateString("fa-IR")}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-5 py-4 text-center">
-                        <button
-                          onClick={() => handleTogglePublish(post.id, post.published)}
-                          className="inline-flex"
-                        >
-                          <Badge
-                            variant={post.published ? "success" : "warning"}
-                            className="cursor-pointer hover:opacity-80 transition-opacity"
-                          >
-                            {post.published ? "منتشر شده" : "پیش‌نویس"}
-                          </Badge>
-                        </button>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-center gap-1">
-                          <Link href={`/blog/${post.slug}`} target="_blank">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              title="مشاهده"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Link href={`/admin/blog/edit/${post.id}`}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              title="ویرایش"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                            title="حذف"
-                            onClick={() => handleDelete(post.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
+          <CardContent className="p-0">
+            <ResponsiveTable
+              columns={columns}
+              data={posts}
+              keyExtractor={(post) => post.id}
+              emptyMessage="پستی یافت نشد"
+              getMobileImage={(post) => post.image?.url || post.coverImage}
+            />
+          </CardContent>
         </Card>
       )}
 
@@ -358,6 +322,40 @@ export default function AdminBlogPage() {
           />
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <Modal
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, postId: null })}
+      >
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--color-ink)] mb-2">
+            حذف پست
+          </h3>
+          <p className="text-sm text-[var(--color-ink-muted)] mb-6 leading-relaxed">
+            آیا از حذف این پست اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmModal({ open: false, postId: null })}
+            >
+              انصراف
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={confirmDelete}
+              isLoading={deletePost.isPending}
+            >
+              <Trash2 className="w-4 h-4 ml-1.5" />
+              حذف
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Add Category Modal */}
       <AnimatePresence>

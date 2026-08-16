@@ -108,7 +108,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
@@ -121,17 +121,17 @@ export default function DashboardPage() {
             >
               <Link href={card.href}>
                 <Card className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer h-full">
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center`}>
-                        <Icon className={`w-5 h-5 ${card.color}`} />
+                  <CardContent className="p-3 sm:p-5">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${card.bg} flex items-center justify-center`}>
+                        <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
                       </div>
                       <ArrowLeft className="w-4 h-4 text-[var(--color-ink-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <p className="text-2xl font-bold text-[var(--color-ink)]">
+                    <p className="text-xl sm:text-2xl font-bold text-[var(--color-ink)]">
                       {card.value.toLocaleString("fa-IR")}
                     </p>
-                    <p className="text-xs text-[var(--color-ink-muted)] mt-1">
+                    <p className="text-[10px] sm:text-xs text-[var(--color-ink-muted)] mt-1">
                       {card.title}
                     </p>
                   </CardContent>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Weekly Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -154,12 +154,12 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end justify-between h-52 gap-3 px-2">
+            <div className="flex items-end justify-between h-40 sm:h-52 gap-2 sm:gap-3 px-1 sm:px-2">
               {stats?.weeklyAppointments.map((day, index) => {
                 const height = maxWeekly > 0 ? (day.count / maxWeekly) * 100 : 0;
                 return (
-                  <div key={day.date} className="flex-1 flex flex-col items-center gap-2.5">
-                    <span className="text-xs font-medium text-[var(--color-ink)]">
+                  <div key={day.date} className="flex-1 flex flex-col items-center gap-1.5 sm:gap-2.5">
+                    <span className="text-[10px] sm:text-xs font-medium text-[var(--color-ink)]">
                       {day.count}
                     </span>
                     <motion.div
@@ -168,7 +168,7 @@ export default function DashboardPage() {
                       transition={{ delay: 0.4 + index * 0.08, duration: 0.5, ease: "easeOut" }}
                       className="w-full bg-gradient-to-t from-[var(--color-primary)] to-[var(--color-primary-soft)] rounded-t-lg"
                     />
-                    <span className="text-[11px] text-[var(--color-ink-muted)]">
+                    <span className="text-[9px] sm:text-[11px] text-[var(--color-ink-muted)]">
                       {day.date}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {stats?.recentAppointments.length === 0 ? (
                 <p className="text-center text-[var(--color-ink-muted)] py-8 text-sm">
                   نوبتی ثبت نشده است
@@ -209,28 +209,28 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 + index * 0.08 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary)]/5 transition-colors"
+                      className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-soft)] hover:bg-[var(--color-primary)]/5 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-                          <span className="text-[var(--color-primary)] font-medium text-sm">
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
+                          <span className="text-[var(--color-primary)] font-medium text-xs sm:text-sm">
                             {appointment.customerName.charAt(0)}
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-[var(--color-ink)] text-sm truncate">
+                          <p className="font-medium text-[var(--color-ink)] text-xs sm:text-sm truncate">
                             {appointment.customerName}
                           </p>
-                          <p className="text-[11px] text-[var(--color-ink-muted)] truncate">
+                          <p className="text-[10px] sm:text-[11px] text-[var(--color-ink-muted)] truncate">
                             {appointment.service.name} &middot; {appointment.time}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[11px] text-[var(--color-ink-muted)] hidden sm:block">
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-[11px] text-[var(--color-ink-muted)] hidden sm:block">
                           {appointment.date}
                         </span>
-                        <Badge variant={status.variant} className="text-[10px]">
+                        <Badge variant={status.variant} className="text-[9px] sm:text-[10px]">
                           {status.label}
                         </Badge>
                       </div>

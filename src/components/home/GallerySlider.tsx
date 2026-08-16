@@ -2,24 +2,19 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
+import { useGallery } from "@/hooks/use-gallery";
 import LineUnder from "./LineUnder";
 
-const images = [
-  "/gal1.jpeg",
-  "/gal2.jpeg",
-  "/gal1.jpeg",
-  "/gal2.jpeg",
-  "/gal1.jpeg",
-  "/gal2.jpeg",
-  "/gal1.jpeg",
-  "/gal2.jpeg",
-];
-
 export function GallerySlider() {
+  const { data: galleryData, isLoading } = useGallery(10);
+  const images = galleryData?.items ?? [];
+
   return (
     <section className="py-10 sm:py-20 bg-bg-soft relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
@@ -42,64 +37,102 @@ export function GallerySlider() {
           </div>
         </motion.div>
 
-        {/* Slider */}
-        <Swiper
-          modules={[Navigation, Autoplay]}
-          navigation
-          autoplay={{ delay: 4000, disableOnInteraction: false }}
-          spaceBetween={10}
-          slidesPerView={2}
-          breakpoints={{
-            480: { slidesPerView: 2, spaceBetween: 12 },
-            768: { slidesPerView: 4, spaceBetween: 16 },
-            1024: { slidesPerView: 5, spaceBetween: 16 },
-          }}
-          dir="rtl"
-          className="gallery-swiper"
-        >
-          {images.map((src, i) => (
-            <SwiperSlide key={`${src}-${i}`}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="group relative h-[160px] sm:h-[200px] lg:h-[260px] rounded-2xl overflow-hidden cursor-pointer"
-              >
-                <Image
-                  src={src}
-                  alt={`نمونه کار ${i + 1}`}
-                  width={300}
-                  height={400}
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                />
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 inset-x-0 p-4">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-                        />
-                      </svg>
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[160px] sm:h-[200px] lg:h-[260px] rounded-2xl bg-[var(--color-ink)]/5 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : images.length === 0 ? null : (
+          <>
+            {/* Slider */}
+            <Swiper
+              modules={[Navigation, Autoplay]}
+              navigation
+              autoplay={{ delay: 4000, disableOnInteraction: false }}
+              spaceBetween={10}
+              slidesPerView={2}
+              breakpoints={{
+                480: { slidesPerView: 2, spaceBetween: 12 },
+                768: { slidesPerView: 4, spaceBetween: 16 },
+                1024: { slidesPerView: 5, spaceBetween: 16 },
+              }}
+              dir="rtl"
+              className="gallery-swiper"
+            >
+              {images.map((item, i) => (
+                <SwiperSlide key={item.id}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                    className="group relative h-[160px] sm:h-[200px] lg:h-[260px] rounded-2xl overflow-hidden cursor-pointer"
+                  >
+                    {item.image?.url ? (
+                      <Image
+                        src={item.image.url}
+                        alt={item.image.alt || item.title || `گالری ${i + 1}`}
+                        width={300}
+                        height={400}
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-gold-accent)]/10 flex items-center justify-center">
+                        <span className="text-3xl font-bold text-[var(--color-primary)]/20">
+                          {item.title?.charAt(0) || "G"}
+                        </span>
+                      </div>
+                    )}
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute bottom-0 inset-x-0 p-4">
+                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                {/* Gold border on hover */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-[var(--color-gold-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </motion.div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+                    {/* Gold border on hover */}
+                    <div className="absolute inset-0 rounded-2xl border-2 border-[var(--color-gold-accent)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            {/* View More Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex justify-center mt-8 sm:mt-10"
+            >
+              <Link
+                href="/gallery"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-[var(--color-primary)] text-[var(--color-primary)] font-medium text-sm hover:bg-[var(--color-primary)] hover:text-white transition-all duration-300 group"
+              >
+                <span>مشاهده همه</span>
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+          </>
+        )}
       </div>
 
       {/* Custom swiper styles */}

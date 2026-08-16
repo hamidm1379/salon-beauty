@@ -7,7 +7,17 @@ import { Newspaper, ArrowLeft } from "lucide-react";
 import { Butterflies } from "./Butterflies";
 import { LeafPattern } from "./LeafPattern";
 
-export function Hero() {
+interface HeroProps {
+  bannerUrl?: string;
+  bannerText?: string;
+  bannerTextSecondary?: string;
+}
+
+export function Hero({ bannerUrl, bannerText, bannerTextSecondary }: HeroProps) {
+  const bannerImage = bannerUrl || "/hero.png";
+  const headline = bannerText || "هنر زیبایی";
+  const description = bannerTextSecondary || "جایی که تخصص، هنر و ظرافت در هم می‌آمیزد تا زیبایی طبیعی شما را در بالاترین سطح ممکن نمایان کند.";
+
   const fadeUp = {
     hidden: { opacity: 0, y: 30 },
     visible: (i: number) => ({
@@ -25,7 +35,7 @@ export function Hero() {
       <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] rounded-full bg-[var(--color-primary)]/[0.04] blur-[120px]" />
       <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] rounded-full bg-[var(--color-gold-accent)]/[0.03] blur-[100px]" />
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-6 py-24 sm:py-32 lg:py-0 w-full">
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-6 py-24 sm:py-32 lg:py-0 w-full max-sm:pb-0">
         <div className="grid lg:grid-cols-2 gap-10 sm:gap-16 lg:gap-20 items-center">
           {/* ── Text Content ── */}
           <motion.div initial="hidden" animate="visible" className="text-center lg:text-right">
@@ -49,18 +59,17 @@ export function Hero() {
               custom={1}
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.2] tracking-tight"
             >
-              <span className="block text-[var(--color-ink)]">هنر زیبایی</span>
-              <span className="block mt-2 text-[var(--color-primary)]">در جزئیات نهفته است</span>
+              <span className="block text-[var(--color-ink)]">{headline}</span>
+              {/* <span className="block mt-2 text-[var(--color-primary)]">در جزئیات نهفته است</span> */}
             </motion.h1>
 
             {/* Description */}
             <motion.p
               variants={fadeUp}
               custom={3}
-              className="text-[var(--color-ink-muted)] text-base sm:text-lg max-w-lg lg:ml-0 mx-auto leading-relaxed"
+              className="mt-2 text-[var(--color-ink-muted)] text-base sm:text-lg max-w-lg lg:ml-0 mx-auto leading-relaxed"
             >
-              جایی که تخصص، هنر و ظرافت در هم می‌آمیزد تا زیبایی طبیعی شما را در بالاترین سطح ممکن
-              نمایان کند.
+              {description}
             </motion.p>
 
             {/* CTAs */}
@@ -103,11 +112,12 @@ export function Hero() {
 
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_8px_40px_-12px_rgba(124,58,237,0.15)]">
                 <Image
-                  src="/hero.png"
+                  src={bannerImage}
                   alt="مدل خدمات زیبایی"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
+                  loading="eager"
                   priority
                 />
               </div>

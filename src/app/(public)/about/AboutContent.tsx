@@ -254,7 +254,7 @@ export function AboutContent() {
       </section>
 
       {/* ── Story Section ── */}
-      <section className="py-20 relative">
+      <section className="py-1 sm:py-20 relative">
         <Container>
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Decorative card */}

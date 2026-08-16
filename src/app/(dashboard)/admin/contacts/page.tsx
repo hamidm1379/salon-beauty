@@ -10,10 +10,12 @@ import {
   Phone,
   User,
   CalendarDays,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
 import {
   useContactMessages,
@@ -24,6 +26,10 @@ import {
 export default function AdminContactsPage() {
   const [page, setPage] = useState(1);
   const [filterRead, setFilterRead] = useState<string>("");
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    messageId: string | null;
+  }>({ open: false, messageId: null });
 
   const { data: messagesData, isLoading } = useContactMessages({
     isRead: filterRead === "read" ? true : filterRead === "unread" ? false : undefined,
@@ -42,14 +48,18 @@ export default function AdminContactsPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("آیا از حذف این پیام اطمینان دارید؟")) {
-      deleteMessage.mutate(id);
-    }
+    setConfirmModal({ open: true, messageId: id });
+  };
+
+  const confirmDelete = () => {
+    if (!confirmModal.messageId) return;
+    deleteMessage.mutate(confirmModal.messageId);
+    setConfirmModal({ open: false, messageId: null });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-[var(--color-ink)]">پیام‌های تماس</h1>
         <div className="text-sm text-[var(--color-ink-muted)]">
           کل: {messagesData?.total || 0} پیام
@@ -58,8 +68,8 @@ export default function AdminContactsPage() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex gap-2">
+        <CardContent className="p-4 max-sm:p-1.25">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
                 setFilterRead("");
@@ -125,28 +135,29 @@ export default function AdminContactsPage() {
               transition={{ delay: index * 0.05 }}
             >
               <Card className={message.isRead ? "" : "border-l-4 border-l-[var(--color-primary)]"}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Contact Info */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
                         <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-[var(--color-ink-muted)]" />
+                          <User className="w-4 h-4 text-[var(--color-ink-muted)] shrink-0" />
                           <span className="font-medium text-[var(--color-ink)]">
                             {message.name}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-[var(--color-ink-muted)]" />
+                          <Mail className="w-4 h-4 text-[var(--color-ink-muted)] shrink-0" />
                           <a
                             href={`mailto:${message.email}`}
-                            className="text-sm text-[var(--color-primary)] hover:underline"
+                            className="text-sm text-[var(--color-primary)] hover:underline truncate"
                           >
                             {message.email}
                           </a>
                         </div>
                         {message.phone && (
                           <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-[var(--color-ink-muted)]" />
+                            <Phone className="w-4 h-4 text-[var(--color-ink-muted)] shrink-0" />
                             <a
                               href={`tel:${message.phone}`}
                               className="text-sm text-[var(--color-primary)] hover:underline"
@@ -157,14 +168,19 @@ export default function AdminContactsPage() {
                         )}
                       </div>
 
+                      {/* Subject */}
                       {message.subject && (
                         <h3 className="font-medium text-[var(--color-ink)] mb-2">
                           {message.subject}
                         </h3>
                       )}
 
-                      <p className="text-[var(--color-ink-muted)] mb-3">{message.message}</p>
+                      {/* Message */}
+                      <p className="text-[var(--color-ink-muted)] mb-3 text-sm leading-relaxed">
+                        {message.message}
+                      </p>
 
+                      {/* Footer */}
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1 text-xs text-[var(--color-ink-muted)]">
                           <CalendarDays className="w-3 h-3" />
@@ -176,7 +192,8 @@ export default function AdminContactsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 mr-4">
+                    {/* Actions */}
+                    <div className="flex sm:flex-col items-center gap-2 sm:mr-4">
                       {!message.isRead && (
                         <Button
                           variant="ghost"
@@ -213,6 +230,40 @@ export default function AdminContactsPage() {
           onPageChange={setPage}
         />
       )}
+
+      {/* Confirm Delete Modal */}
+      <Modal
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, messageId: null })}
+      >
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--color-ink)] mb-2">
+            حذف پیام
+          </h3>
+          <p className="text-sm text-[var(--color-ink-muted)] mb-6 leading-relaxed">
+            آیا از حذف این پیام اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmModal({ open: false, messageId: null })}
+            >
+              انصراف
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={confirmDelete}
+              isLoading={deleteMessage.isPending}
+            >
+              <Trash2 className="w-4 h-4 ml-1.5" />
+              حذف
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

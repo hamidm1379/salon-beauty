@@ -14,6 +14,7 @@ import {
   MessageSquare,
   LogOut,
   Menu,
+  X,
   ChevronLeft,
   ExternalLink,
 } from "lucide-react";
@@ -49,16 +50,25 @@ function SidebarContent({ collapsed, onLinkClick, user, logout }: SidebarContent
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-[var(--color-ink)]/10">
-        <Link href="/admin/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-soft)] flex items-center justify-center">
-            <span className="text-white font-bold text-lg">S</span>
-          </div>
-          {!collapsed && (
-            <span className="text-xl font-bold text-[var(--color-ink)]">
-              مدیریت
-            </span>
-          )}
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/admin/dashboard" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-soft)] flex items-center justify-center">
+              <span className="text-white font-bold text-lg">S</span>
+            </div>
+            {!collapsed && (
+              <span className="text-xl font-bold text-[var(--color-ink)]">
+                مدیریت
+              </span>
+            )}
+          </Link>
+          <button
+            onClick={onLinkClick}
+            className="lg:hidden p-2 rounded-xl hover:bg-[var(--color-bg-soft)] transition-colors"
+            aria-label="بستن"
+          >
+            <X className="w-5 h-5 text-[var(--color-ink-muted)]" />
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}

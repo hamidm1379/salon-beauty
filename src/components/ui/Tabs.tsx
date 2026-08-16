@@ -15,6 +15,7 @@ interface TabsContextValue {
   activeTab: string;
   setActiveTab: (id: string) => void;
   registerTab: (id: string) => void;
+  onTabChange?: (id: string) => void;
 }
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -29,10 +30,11 @@ export interface TabsProps {
   defaultValue: string;
   children: ReactNode;
   className?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
-export function Tabs({ defaultValue, children, className }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+export function Tabs({ defaultValue, children, className, onTabChange }: TabsProps) {
+  const [activeTab, setActiveTabState] = useState(defaultValue);
   const tabsRef = useRef<string[]>([]);
 
   const registerTab = useCallback((id: string) => {
@@ -41,8 +43,16 @@ export function Tabs({ defaultValue, children, className }: TabsProps) {
     }
   }, []);
 
+  const setActiveTab = useCallback(
+    (id: string) => {
+      setActiveTabState(id);
+      onTabChange?.(id);
+    },
+    [onTabChange]
+  );
+
   return (
-    <TabsContext.Provider value={{ activeTab, setActiveTab, registerTab }}>
+    <TabsContext.Provider value={{ activeTab, setActiveTab, registerTab, onTabChange }}>
       <div className={className}>
         {children}
       </div>
@@ -109,6 +119,7 @@ export function TabsTrigger({ value, children, className }: TabsTriggerProps) {
 
   return (
     <button
+      type="button"
       role="tab"
       aria-selected={isActive}
       onClick={() => setActiveTab(value)}

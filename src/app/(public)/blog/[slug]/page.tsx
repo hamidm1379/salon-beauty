@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/Layout";
 import { Badge } from "@/components/ui/Badge";
 import { blogRepository } from "@/repositories/blog.repository";
 import { ArticleSchema, BreadcrumbSchema } from "@/components/shared/JsonLd";
+import { getSiteSettings } from "@/lib/site-settings";
 import { BlogPostContent } from "./BlogPostContent";
 import { ShareSidebar } from "./ShareSidebar";
 
@@ -22,6 +23,7 @@ function estimateReadTime(content: string): number {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await blogRepository.findBySlug(slug);
+  const settings = await getSiteSettings();
 
   if (!post) {
     return { title: "مقاله یافت نشد" };
@@ -45,8 +47,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: image ? [{ url: image, width: 1200, height: 630, alt: post.title }] : [],
       publishedTime: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
-      authors: ["Beauty Salon"],
-      siteName: "Beauty Salon",
+      authors: [settings.salonName],
+      siteName: settings.salonName,
       locale: "fa_IR",
     },
     twitter: {
@@ -64,6 +66,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
   const post = await blogRepository.findBySlug(slug);
+  const settings = await getSiteSettings();
 
   if (!post) {
     notFound();
@@ -84,6 +87,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         datePublished={String(post.publishedAt || post.createdAt)}
         dateModified={String(post.updatedAt)}
         url={shareUrl}
+        site={{ siteName: settings.salonName, logoUrl: settings.logoUrl || undefined }}
       />
       <BreadcrumbSchema
         items={[

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
+import Image from "next/image";
 import { cn } from "@/utils/cn";
 
 interface Column<T> {
@@ -16,6 +17,7 @@ interface ResponsiveTableProps<T> {
   keyExtractor: (item: T) => string;
   onRowClick?: (item: T) => void;
   emptyMessage?: string;
+  getMobileImage?: (item: T) => string | null | undefined;
 }
 
 export function ResponsiveTable<T>({
@@ -24,6 +26,7 @@ export function ResponsiveTable<T>({
   keyExtractor,
   onRowClick,
   emptyMessage = "داده‌ای یافت نشد",
+  getMobileImage,
 }: ResponsiveTableProps<T>) {
   if (data.length === 0) {
     return (
@@ -78,29 +81,55 @@ export function ResponsiveTable<T>({
 
       {/* Mobile Cards */}
       <div className="md:hidden space-y-3">
-        {data.map((item) => (
-          <div
-            key={keyExtractor(item)}
-            onClick={() => onRowClick?.(item)}
-            className={cn(
-              "bg-white rounded-2xl border border-[var(--color-ink)]/5 p-4 space-y-3",
-              onRowClick && "cursor-pointer active:scale-[0.98] transition-transform"
-            )}
-          >
-            {columns.map((col) => (
-              <div key={col.key} className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-ink-muted)]">
-                  {col.label}
-                </span>
-                <span className="text-sm font-medium text-[var(--color-ink)]">
-                  {col.render
-                    ? col.render(item)
-                    : String((item as Record<string, unknown>)[col.key] ?? "")}
-                </span>
+        {data.map((item) => {
+          const mobileImage = getMobileImage?.(item);
+          const visibleColumns = columns.filter((col) => col.key !== "actions");
+
+          return (
+            <div
+              key={keyExtractor(item)}
+              onClick={() => onRowClick?.(item)}
+              className={cn(
+                "bg-white rounded-2xl border border-[var(--color-ink)]/5 p-3",
+                onRowClick && "cursor-pointer active:scale-[0.98] transition-transform"
+              )}
+            >
+              <div className="flex gap-3">
+                {mobileImage && (
+                  <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[var(--color-bg-soft)]">
+                    <Image
+                      src={mobileImage}
+                      alt=""
+                      width={64}
+                      height={64}
+                      sizes="64px"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  {visibleColumns.map((col) => (
+                    <div key={col.key} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-[var(--color-ink-muted)]">
+                        {col.label}
+                      </span>
+                      <span className="text-xs font-medium text-[var(--color-ink)] truncate">
+                        {col.render
+                          ? col.render(item)
+                          : String((item as Record<string, unknown>)[col.key] ?? "")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        ))}
+              {columns.find((c) => c.key === "actions") && (
+                <div className="mt-2 pt-2 border-t border-[var(--color-ink)]/5 flex justify-end">
+                  {columns.find((c) => c.key === "actions")!.render?.(item)}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </>
   );

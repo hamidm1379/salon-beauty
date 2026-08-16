@@ -6,14 +6,17 @@ import {
   Loader2,
   Search,
   Users,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
 import { ResponsiveTable } from "@/components/admin/ResponsiveTable";
+import { useAuth } from "@/hooks/use-auth";
 import {
   useAdminUsers,
   useUpdateUserRole,
@@ -27,9 +30,17 @@ const roleOptions = [
 ];
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.role === "ADMIN";
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string;
+  }>({ open: false, userId: null, userName: "" });
 
   const { data: usersData, isLoading } = useAdminUsers({
     role: roleFilter || undefined,
@@ -48,10 +59,14 @@ export default function AdminUsersPage() {
     updateRole.mutate({ id, role: newRole });
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("آیا از حذف این کاربر اطمینان دارید؟")) {
-      deleteUser.mutate(id);
-    }
+  const handleDelete = (id: string, name: string) => {
+    setConfirmModal({ open: true, userId: id, userName: name });
+  };
+
+  const confirmDelete = () => {
+    if (!confirmModal.userId) return;
+    deleteUser.mutate(confirmModal.userId);
+    setConfirmModal({ open: false, userId: null, userName: "" });
   };
 
   const columns = [
@@ -76,14 +91,20 @@ export default function AdminUsersPage() {
       key: "role",
       label: "نقش",
       render: (user: (typeof users)[0]) => (
-        <select
-          value={user.role}
-          onChange={(e) => handleRoleChange(user.id, e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-white"
-        >
-          <option value="ADMIN">مدیر</option>
-          <option value="EDITOR">ویرایشگر</option>
-        </select>
+        isAdmin ? (
+          <select
+            value={user.role}
+            onChange={(e) => handleRoleChange(user.id, e.target.value)}
+            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-white"
+          >
+            <option value="ADMIN">مدیر</option>
+            <option value="EDITOR">ویرایشگر</option>
+          </select>
+        ) : (
+          <Badge variant={user.role === "ADMIN" ? "success" : "default"}>
+            {user.role === "ADMIN" ? "مدیر" : "ویرایشگر"}
+          </Badge>
+        )
       ),
     },
     {
@@ -117,23 +138,25 @@ export default function AdminUsersPage() {
       key: "actions",
       label: "عملیات",
       render: (user: (typeof users)[0]) => (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDelete(user.id)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        isAdmin ? (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(user.id, user.name)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : null
       ),
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center">
             <Users className="w-5 h-5 text-[var(--color-primary)]" />
@@ -203,6 +226,40 @@ export default function AdminUsersPage() {
           onPageChange={setPage}
         />
       )}
+
+      {/* Confirm Delete Modal */}
+      <Modal
+        open={confirmModal.open}
+        onClose={() => setConfirmModal({ open: false, userId: null, userName: "" })}
+      >
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[var(--color-ink)] mb-2">
+            حذف کاربر
+          </h3>
+          <p className="text-sm text-[var(--color-ink-muted)] mb-6 leading-relaxed">
+            آیا از حذف کاربر «{confirmModal.userName}» اطمینان دارید؟ این عمل قابل بازگشت نیست.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmModal({ open: false, userId: null, userName: "" })}
+            >
+              انصراف
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={confirmDelete}
+              isLoading={deleteUser.isPending}
+            >
+              <Trash2 className="w-4 h-4 ml-1.5" />
+              حذف
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
