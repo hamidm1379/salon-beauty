@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { Loader2, Shield, RefreshCw, Calculator } from "lucide-react";
 import toast from "react-hot-toast";
 import axiosInstance from "@/lib/axios";
@@ -29,6 +29,15 @@ function generateCaptcha() {
   return { a, op, b, answer };
 }
 
+let _clientCaptcha: ReturnType<typeof generateCaptcha> | null = null;
+
+function getClientCaptcha(): ReturnType<typeof generateCaptcha> {
+  if (_clientCaptcha === null) {
+    _clientCaptcha = generateCaptcha();
+  }
+  return _clientCaptcha;
+}
+
 const loginSchema = z.object({
   username: z.string().min(1, "نام کاربری الزامی است"),
   password: z.string().min(1, "رمز عبور الزامی است"),
@@ -39,12 +48,17 @@ type LoginInput = z.infer<typeof loginSchema>;
 export default function AdminLoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [captcha, setCaptcha] = useState<ReturnType<typeof generateCaptcha>>(generateCaptcha);
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaError, setCaptchaError] = useState("");
 
+  const captcha = useSyncExternalStore(
+    () => () => {},
+    getClientCaptcha,
+    () => null,
+  );
+
   const refreshCaptcha = useCallback(() => {
-    setCaptcha(generateCaptcha());
+    _clientCaptcha = generateCaptcha();
     setCaptchaInput("");
     setCaptchaError("");
   }, []);
